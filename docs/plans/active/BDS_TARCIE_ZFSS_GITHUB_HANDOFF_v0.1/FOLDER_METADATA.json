@@ -1,0 +1,14 @@
+{
+  "schema_version": "bds.folder-metadata.v1",
+  "folder_id": "BDS_TARCIE_ZFSS_GITHUB_HANDOFF_v0.1",
+  "folder_role": "canonical_plan_set",
+  "plan_id": "BDS-TARCIE-ZFSS-GITHUB-HANDOFF-v0.1",
+  "lifecycle_status": "proposed",
+  "authority_status": "documentation-only",
+  "owner": "Boswell Digital Solutions",
+  "decision_owner": "Charlie Boswell",
+  "canonical": true,
+  "supersedes": null,
+  "supersession_rule": "Any semantic change requires a reviewed revision; consumer packets may not override this canonical plan.",
+  "created_at": "2026-08-14"
+}

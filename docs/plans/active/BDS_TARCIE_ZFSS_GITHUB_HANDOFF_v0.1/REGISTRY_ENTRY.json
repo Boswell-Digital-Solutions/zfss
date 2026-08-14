@@ -1,0 +1,24 @@
+{
+  "schema_version": "bds.plan-registry-entry.v1",
+  "plan_id": "BDS-TARCIE-ZFSS-GITHUB-HANDOFF-v0.1",
+  "title": "Tarcie to ZFSS Governed GitHub Issue Handoff",
+  "version": "0.1",
+  "status": "proposed",
+  "authority_status": "documentation-only",
+  "canonical_repository": "Boswell-Digital-Solutions/zfss",
+  "canonical_path": "docs/plans/active/BDS_TARCIE_ZFSS_GITHUB_HANDOFF_v0.1/",
+  "decision_owner": "Charlie Boswell",
+  "board_review_1": "open",
+  "board_review_2": "not_started",
+  "consumer_repositories": [
+    "Boswell-Digital-Solutions/Forge_Command",
+    "Boswell-Digital-Solutions/forge-smithy"
+  ],
+  "target_repository_allowlist": [
+    "Boswell-Digital-Solutions/Forge_Command",
+    "Boswell-Digital-Solutions/forge-smithy",
+    "Boswell-Digital-Solutions/zfss"
+  ],
+  "activation": "proposed_only",
+  "note": "This file is a proposed registry entry and does not activate or authorize the plan."
+}
