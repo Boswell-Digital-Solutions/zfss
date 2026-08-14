@@ -15,7 +15,7 @@ Exit: GATE-00 receipt and Board Review 1 decision.
 
 ## Phase 1 — Contracts and fixtures
 
-- Define the six candidate contracts in the canonical plan.
+- Define the seven candidate contracts in the canonical plan.
 - Define canonicalization, hashing, reason codes, and trace markers.
 - Publish positive, negative, replay, conflict, partial, timeout, ambiguous-outcome, and public-leak fixtures.
 - Prove deterministic proposal construction without live services.
