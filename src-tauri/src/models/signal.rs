@@ -1,7 +1,7 @@
 //! Signal model - Raw immutable user expression
 //!
-//! Signals are the entry point for all feedback. They are immutable
-//! after creation (except for status transitions and issue linking).
+//! Signals are the entry point for all feedback. Canonical rows are immutable;
+//! status transitions and issue links are appended as events.
 
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};

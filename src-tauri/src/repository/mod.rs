@@ -1158,3 +1158,146 @@ impl ResponseSummaryRow {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::models::{
+        ArtifactType, Classification, DecisionType, ResponseChannel, Severity, SignalSource,
+    };
+    use sqlx::postgres::PgPoolOptions;
+
+    #[tokio::test]
+    async fn repository_executes_complete_append_only_lifecycle() {
+        let database_url = std::env::var("ZFSS_TEST_DATABASE_URL")
+            .expect("ZFSS_TEST_DATABASE_URL is required for repository integration tests");
+        let pool = PgPoolOptions::new()
+            .max_connections(2)
+            .connect(&database_url)
+            .await
+            .expect("connect repository test database");
+        let actor = "repository-integration-test";
+
+        let signal = append_signal(
+            &pool,
+            SignalCreate {
+                source: SignalSource::Internal,
+                raw_text: "repository lifecycle signal".to_string(),
+                app_key: Some("zfss-test".to_string()),
+                app_version: None,
+                environment: None,
+                reporter: None,
+            },
+            actor,
+        )
+        .await
+        .expect("append signal");
+        assert_eq!(signal.status, "new");
+
+        let issue = append_issue(
+            &pool,
+            IssueCreate {
+                title: "Repository lifecycle issue".to_string(),
+                description: None,
+                classification: Classification::Bug,
+                severity: Severity::Major,
+            },
+            actor,
+        )
+        .await
+        .expect("append issue");
+
+        let linked = link_signal_to_issue(&pool, &signal.id, &issue.id, actor)
+            .await
+            .expect("link signal");
+        assert_eq!(linked.status, "linked");
+        assert_eq!(linked.linked_issue_id.as_deref(), Some(issue.id.as_str()));
+
+        let summaries = list_issues(&pool, None, 100).await.expect("list issues");
+        let summary = summaries
+            .iter()
+            .find(|candidate| candidate.id == issue.id)
+            .expect("created issue summary");
+        assert_eq!(summary.signal_count, 1);
+
+        append_decision(
+            &pool,
+            DecisionCreate {
+                issue_id: issue.id.clone(),
+                decision_type: DecisionType::FixNow,
+                rationale: "Fix through repository integration coverage".to_string(),
+                steward_deadline_days: 7,
+            },
+            actor,
+        )
+        .await
+        .expect("append decision");
+        let decided = get_issue(&pool, &issue.id).await.unwrap().unwrap();
+        assert_eq!(decided.status, "decided");
+
+        transition_issue_status(&pool, &issue.id, IssueStatus::InProgress, actor, None)
+            .await
+            .expect("start issue");
+        transition_issue_status(
+            &pool,
+            &issue.id,
+            IssueStatus::ReadyForVerification,
+            actor,
+            None,
+        )
+        .await
+        .expect("ready issue");
+
+        let artifact = append_artifact(
+            &pool,
+            ArtifactCreate {
+                issue_id: issue.id.clone(),
+                artifact_type: ArtifactType::Test,
+                title: "Repository integration proof".to_string(),
+                description: None,
+                ref_url: None,
+                note: None,
+            },
+            actor,
+        )
+        .await
+        .expect("append artifact");
+        let verified = verify_artifact(&pool, &artifact.id, actor)
+            .await
+            .expect("verify artifact");
+        assert!(verified.verified);
+        assert!(has_verified_artifact(&pool, &issue.id).await.unwrap());
+
+        let closed = transition_issue_status(&pool, &issue.id, IssueStatus::Closed, actor, None)
+            .await
+            .expect("close issue");
+        assert_eq!(closed.status, "closed");
+
+        let response = append_response(
+            &pool,
+            ResponseCreate {
+                signal_id: signal.id,
+                issue_id: Some(issue.id),
+                response_class: "resolution".to_string(),
+                channel: ResponseChannel::InApp,
+                body: "The issue is resolved.".to_string(),
+            },
+            actor,
+        )
+        .await
+        .expect("append response");
+        for state in [
+            ApprovalState::Pending,
+            ApprovalState::Approved,
+            ApprovalState::Sent,
+        ] {
+            transition_response_state(&pool, &response.id, state, actor, None, None)
+                .await
+                .expect("transition response");
+        }
+        let sent = get_response(&pool, &response.id).await.unwrap().unwrap();
+        assert_eq!(sent.approval_state, "sent");
+        assert_eq!(sent.approved_by.as_deref(), Some(actor));
+        assert!(sent.sent_at.is_some());
+    }
+}
