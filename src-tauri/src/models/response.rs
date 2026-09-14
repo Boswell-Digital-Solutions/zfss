@@ -132,3 +132,33 @@ pub struct ResponseSummary {
     pub drafted_at: DateTime<Utc>,
     pub has_violations: bool,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::ApprovalState;
+
+    #[test]
+    fn response_transition_matrix_is_fail_closed() {
+        use ApprovalState::*;
+        let states = [Draft, Pending, Approved, Sent, Blocked];
+        let allowed = [
+            (Draft, Pending),
+            (Pending, Approved),
+            (Pending, Blocked),
+            (Approved, Sent),
+            (Blocked, Draft),
+        ];
+
+        for current in states {
+            for next in states {
+                assert_eq!(
+                    current.can_transition_to(next),
+                    allowed.contains(&(current, next)),
+                    "unexpected response transition: {} -> {}",
+                    current.as_str(),
+                    next.as_str()
+                );
+            }
+        }
+    }
+}

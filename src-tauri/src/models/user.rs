@@ -127,3 +127,60 @@ impl CurrentUser {
         })
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::UserRole;
+
+    #[test]
+    fn role_capability_matrix_matches_governance_contract() {
+        use UserRole::*;
+        let cases = [
+            (
+                Steward,
+                [true, true, true, true, true, true, true, true, true, true],
+            ),
+            (
+                Operator,
+                [
+                    true, true, true, false, false, false, true, false, false, false,
+                ],
+            ),
+            (
+                Engineer,
+                [
+                    true, false, false, false, true, false, false, false, false, false,
+                ],
+            ),
+            (
+                AI,
+                [
+                    true, false, false, false, false, false, true, false, false, false,
+                ],
+            ),
+        ];
+
+        for (role, expected) in cases {
+            let actual = [
+                role.can_log_signal(),
+                role.can_link_signal(),
+                role.can_create_issue(),
+                role.can_make_decision(),
+                role.can_create_artifact(),
+                role.can_verify_artifact(),
+                role.can_draft_response(),
+                role.can_approve_response(),
+                role.can_close_issue(),
+                role.can_modify_vocabulary(),
+            ];
+            assert_eq!(actual, expected, "capability drift for {}", role.as_str());
+        }
+    }
+
+    #[test]
+    fn unknown_role_is_rejected() {
+        assert_eq!(UserRole::from_str("steward"), None);
+        assert_eq!(UserRole::from_str("Admin"), None);
+        assert_eq!(UserRole::from_str(""), None);
+    }
+}

@@ -163,3 +163,35 @@ pub struct SignalSummary {
     pub created_at: DateTime<Utc>,
     pub attachment_count: i64,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::SignalStatus;
+
+    #[test]
+    fn signal_transition_matrix_is_fail_closed() {
+        use SignalStatus::*;
+        let states = [New, Linked, NeedsInfo, Responded, Closed];
+        let allowed = [
+            (New, Linked),
+            (New, NeedsInfo),
+            (Linked, Responded),
+            (Linked, NeedsInfo),
+            (NeedsInfo, Linked),
+            (NeedsInfo, New),
+            (Responded, Closed),
+        ];
+
+        for current in states {
+            for next in states {
+                assert_eq!(
+                    current.can_transition_to(next),
+                    allowed.contains(&(current, next)),
+                    "unexpected signal transition: {} -> {}",
+                    current.as_str(),
+                    next.as_str()
+                );
+            }
+        }
+    }
+}

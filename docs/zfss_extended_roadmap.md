@@ -31,6 +31,8 @@
 **Goal:** align repo-specific testing, QA, and handover documentation with current implementation reality.
 
 **Delivered:** frontend build, documentation/authority validation, Rust unit-test and formatting
-gates, full migration replay, and a disposable PostgreSQL append-only contract test.
+gates, full migration replay, a disposable PostgreSQL append-only contract test, fail-closed model
+transition matrices, and the complete role-capability matrix.
 
-**Remaining:** direct IPC, role-authority, lifecycle-transition, and repository integration tests.
+**Remaining:** direct IPC role-enforcement, database-backed lifecycle-transition, and repository
+integration tests.
