@@ -37,6 +37,9 @@ regex = "1"
 rand = "0.8"
 dotenvy = "0.15"
 
+[dev-dependencies]
+tauri = { version = "2", features = ["test"] }
+
 [features]
 default = ["custom-protocol"]
 custom-protocol = ["tauri/custom-protocol"]
