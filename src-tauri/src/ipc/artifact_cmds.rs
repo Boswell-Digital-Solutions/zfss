@@ -5,6 +5,7 @@
 
 use crate::models::{Artifact, ArtifactCreate, ArtifactSummary, ArtifactType};
 use crate::repository;
+use crate::service::error::repository_error;
 use crate::service::input::{require_id, require_text};
 use crate::service::{AuthorityAction, require_authority};
 use crate::state::AppState;
@@ -42,7 +43,7 @@ pub async fn create_artifact(
     // Verify issue exists
     repository::get_issue(&state.pool, &issue_id)
         .await
-        .map_err(|e| format!("Failed to get issue: {}", e))?
+        .map_err(|error| repository_error("get issue for artifact", error))?
         .ok_or_else(|| format!("Issue not found: {}", issue_id))?;
 
     let created_by = state.current_user_id();
@@ -60,7 +61,7 @@ pub async fn create_artifact(
         &created_by,
     )
     .await
-    .map_err(|e| format!("Failed to create artifact: {}", e))
+    .map_err(|error| repository_error("create artifact", error))
 }
 
 /// Get a single artifact by ID
@@ -72,7 +73,7 @@ pub async fn get_artifact(
     require_id(&id, "id", "art")?;
     repository::get_artifact(&state.pool, &id)
         .await
-        .map_err(|e| format!("Failed to get artifact: {}", e))
+        .map_err(|error| repository_error("get artifact", error))
 }
 
 /// List all artifacts for an issue
@@ -84,7 +85,7 @@ pub async fn list_artifacts_for_issue(
     require_id(&issue_id, "issue_id", "iss")?;
     repository::list_artifacts_for_issue(&state.pool, &issue_id)
         .await
-        .map_err(|e| format!("Failed to list artifacts: {}", e))
+        .map_err(|error| repository_error("list artifacts", error))
 }
 
 /// Verify an artifact (Steward only)
@@ -101,7 +102,7 @@ pub async fn verify_artifact(
 
     repository::verify_artifact(&state.pool, &artifact_id, &verified_by)
         .await
-        .map_err(|e| format!("Failed to verify artifact: {}", e))
+        .map_err(|error| repository_error("verify artifact", error))
 }
 
 /// Check if an issue has any verified artifacts
@@ -113,5 +114,5 @@ pub async fn has_verified_artifact(
     require_id(&issue_id, "issue_id", "iss")?;
     repository::has_verified_artifact(&state.pool, &issue_id)
         .await
-        .map_err(|e| format!("Failed to check verified artifacts: {}", e))
+        .map_err(|error| repository_error("check verified artifacts", error))
 }

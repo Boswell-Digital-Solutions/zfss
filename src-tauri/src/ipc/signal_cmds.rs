@@ -5,6 +5,7 @@
 use crate::constraints::MAX_RAW_TEXT_BYTES;
 use crate::models::{Signal, SignalCreate, SignalSource, SignalStatus};
 use crate::repository;
+use crate::service::error::repository_error;
 use crate::service::input::{list_limit, require_id, require_text, truncate_utf8};
 use crate::service::{AuthorityAction, require_authority};
 use crate::state::AppState;
@@ -59,7 +60,7 @@ pub async fn capture_signal(
         &created_by,
     )
     .await
-    .map_err(|e| format!("Failed to capture signal: {}", e))?;
+    .map_err(|error| repository_error("capture signal", error))?;
 
     Ok(CaptureResult {
         signal_id: signal.id,
@@ -88,7 +89,7 @@ pub async fn list_signals(
 
     repository::list_signals(&state.pool, status_filter, limit)
         .await
-        .map_err(|e| format!("Failed to list signals: {}", e))
+        .map_err(|error| repository_error("list signals", error))
 }
 
 /// Get a single signal by ID
@@ -100,7 +101,7 @@ pub async fn get_signal(
     require_id(&id, "id", "sig")?;
     repository::get_signal(&state.pool, &id)
         .await
-        .map_err(|e| format!("Failed to get signal: {}", e))
+        .map_err(|error| repository_error("get signal", error))
 }
 
 /// Link a signal to an issue
@@ -118,5 +119,5 @@ pub async fn link_signal_to_issue(
 
     repository::link_signal_to_issue(&state.pool, &signal_id, &issue_id, &user_id)
         .await
-        .map_err(|e| format!("Failed to link signal: {}", e))
+        .map_err(|error| repository_error("link signal", error))
 }

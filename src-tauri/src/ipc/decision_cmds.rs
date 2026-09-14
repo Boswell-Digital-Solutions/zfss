@@ -6,6 +6,7 @@
 use crate::constraints::DEFAULT_STEWARD_DEADLINE_DAYS;
 use crate::models::{Decision, DecisionCreate, DecisionHistoryEntry, DecisionType};
 use crate::repository;
+use crate::service::error::repository_error;
 use crate::service::input::{require_id, require_text};
 use crate::service::{AuthorityAction, require_authority};
 use crate::state::AppState;
@@ -41,7 +42,7 @@ pub async fn record_decision(
     // Verify issue exists
     let issue = repository::get_issue(&state.pool, &issue_id)
         .await
-        .map_err(|e| format!("Failed to get issue: {}", e))?
+        .map_err(|error| repository_error("get issue for decision", error))?
         .ok_or_else(|| format!("Issue not found: {}", issue_id))?;
 
     let decided_by = state.current_user_id();
@@ -57,7 +58,7 @@ pub async fn record_decision(
         &decided_by,
     )
     .await
-    .map_err(|e| format!("Failed to record decision: {}", e))
+    .map_err(|error| repository_error("record decision", error))
 }
 
 /// Get a single decision by ID
@@ -69,7 +70,7 @@ pub async fn get_decision(
     require_id(&id, "id", "dec")?;
     repository::get_decision(&state.pool, &id)
         .await
-        .map_err(|e| format!("Failed to get decision: {}", e))
+        .map_err(|error| repository_error("get decision", error))
 }
 
 /// List all decisions for an issue (history)
@@ -81,7 +82,7 @@ pub async fn list_decisions_for_issue(
     require_id(&issue_id, "issue_id", "iss")?;
     repository::list_decisions_for_issue(&state.pool, &issue_id)
         .await
-        .map_err(|e| format!("Failed to list decisions: {}", e))
+        .map_err(|error| repository_error("list decisions", error))
 }
 
 /// Get the current (latest) decision for an issue
@@ -93,5 +94,5 @@ pub async fn get_current_decision(
     require_id(&issue_id, "issue_id", "iss")?;
     repository::get_current_decision_for_issue(&state.pool, &issue_id)
         .await
-        .map_err(|e| format!("Failed to get current decision: {}", e))
+        .map_err(|error| repository_error("get current decision", error))
 }

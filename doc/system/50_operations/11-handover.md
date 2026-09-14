@@ -25,7 +25,7 @@
 - Repository operations and centralized role authorization are implemented; broader service-layer business logic remains pending
 - Frontend view modules exist, but the active entrypoint still exposes only signal capture
 - The dedicated lifecycle module remains a placeholder; transition logic currently lives outside that layer
-- Rust coverage includes typed IDs, fail-closed IPC input validation, model transitions, role capabilities, IPC authority decisions, fail-closed role resolution, and a PostgreSQL-backed end-to-end repository lifecycle; SQL contracts cover append-only projections
+- Rust coverage includes typed IDs, fail-closed IPC input validation, redacted repository-error translation, model transitions, role capabilities, IPC authority decisions, fail-closed role resolution, and a PostgreSQL-backed end-to-end repository lifecycle; SQL contracts cover append-only projections
 - CI covers frontend build, documentation and authority checks, Rust tests/formatting, migration replay, and the PostgreSQL append-only contract
 
 ### Critical Constraints
@@ -40,8 +40,8 @@
 1. Expand the service layer beyond its centralized role-authority checks
 2. Implement the dedicated lifecycle state-machine layer
 3. Connect the existing router and management views to the active frontend entrypoint
-4. Add command-level tests around database error translation
-5. Replace stringly typed IPC errors with stable error codes
+4. Extend stable error codes to validation and authority failures
+5. Replace string return errors with a structured serializable IPC envelope
 
 ### Dev Quickref
 
