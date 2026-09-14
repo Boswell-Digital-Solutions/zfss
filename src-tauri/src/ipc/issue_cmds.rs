@@ -4,6 +4,7 @@
 
 use crate::models::{Classification, Issue, IssueCreate, IssueStatus, IssueSummary, Severity};
 use crate::repository;
+use crate::service::input::{list_limit, require_id, require_text};
 use crate::service::{AuthorityAction, require_authority};
 use crate::state::AppState;
 use std::sync::Arc;
@@ -21,13 +22,7 @@ pub async fn create_issue(
     require_authority(state.current_user_role()?, AuthorityAction::CreateIssue)?;
 
     // Validate title
-    if title.trim().is_empty() {
-        return Err("title cannot be empty".to_string());
-    }
-
-    if title.len() > 500 {
-        return Err("title cannot exceed 500 characters".to_string());
-    }
+    require_text(&title, "title", 1, Some(500))?;
 
     // Parse classification
     let classification_enum = Classification::from_str(&classification).ok_or_else(|| {
@@ -68,7 +63,7 @@ pub async fn list_issues(
     limit: Option<i32>,
     state: State<'_, Arc<AppState>>,
 ) -> Result<Vec<IssueSummary>, String> {
-    let limit = (limit.unwrap_or(50).min(100)) as i64;
+    let limit = list_limit(limit)?;
 
     let status_filter = if let Some(status_value) = status {
         Some(
@@ -90,6 +85,7 @@ pub async fn get_issue(
     id: String,
     state: State<'_, Arc<AppState>>,
 ) -> Result<Option<Issue>, String> {
+    require_id(&id, "id", "iss")?;
     repository::get_issue(&state.pool, &id)
         .await
         .map_err(|e| format!("Failed to get issue: {}", e))
@@ -103,6 +99,10 @@ pub async fn transition_issue(
     reason: Option<String>,
     state: State<'_, Arc<AppState>>,
 ) -> Result<Issue, String> {
+    require_id(&issue_id, "issue_id", "iss")?;
+    if let Some(value) = reason.as_deref() {
+        require_text(value, "reason", 1, None)?;
+    }
     let new_status_enum = IssueStatus::from_str(&new_status).ok_or_else(|| {
         format!(
             "Invalid status: '{}'. Valid: pending_decision, decided, in_progress, ready_for_verification, closed",

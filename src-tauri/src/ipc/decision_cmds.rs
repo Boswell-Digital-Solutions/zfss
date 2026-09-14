@@ -6,6 +6,7 @@
 use crate::constraints::DEFAULT_STEWARD_DEADLINE_DAYS;
 use crate::models::{Decision, DecisionCreate, DecisionHistoryEntry, DecisionType};
 use crate::repository;
+use crate::service::input::{require_id, require_text};
 use crate::service::{AuthorityAction, require_authority};
 use crate::state::AppState;
 use std::sync::Arc;
@@ -23,9 +24,10 @@ pub async fn record_decision(
     // Enforce Steward-only authority
     require_authority(state.current_user_role()?, AuthorityAction::MakeDecision)?;
 
-    // Validate rationale length
-    if rationale.len() < 10 {
-        return Err("rationale must be at least 10 characters".to_string());
+    require_id(&issue_id, "issue_id", "iss")?;
+    require_text(&rationale, "rationale", 10, None)?;
+    if !matches!(steward_deadline_days, None | Some(1..=3650)) {
+        return Err("steward_deadline_days must be between 1 and 3650".to_string());
     }
 
     // Parse decision type
@@ -64,6 +66,7 @@ pub async fn get_decision(
     id: String,
     state: State<'_, Arc<AppState>>,
 ) -> Result<Option<Decision>, String> {
+    require_id(&id, "id", "dec")?;
     repository::get_decision(&state.pool, &id)
         .await
         .map_err(|e| format!("Failed to get decision: {}", e))
@@ -75,6 +78,7 @@ pub async fn list_decisions_for_issue(
     issue_id: String,
     state: State<'_, Arc<AppState>>,
 ) -> Result<Vec<DecisionHistoryEntry>, String> {
+    require_id(&issue_id, "issue_id", "iss")?;
     repository::list_decisions_for_issue(&state.pool, &issue_id)
         .await
         .map_err(|e| format!("Failed to list decisions: {}", e))
@@ -86,6 +90,7 @@ pub async fn get_current_decision(
     issue_id: String,
     state: State<'_, Arc<AppState>>,
 ) -> Result<Option<Decision>, String> {
+    require_id(&issue_id, "issue_id", "iss")?;
     repository::get_current_decision_for_issue(&state.pool, &issue_id)
         .await
         .map_err(|e| format!("Failed to get current decision: {}", e))

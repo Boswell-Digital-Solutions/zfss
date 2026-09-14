@@ -500,7 +500,7 @@ Enforces append-only semantics at the code level:
 ### Service Layer (service/)
 
 Business logic enforcement:
-- Input validation (text length, enum values)
+- Centralized fail-closed IPC validation (typed ID shape, Unicode-safe text limits, bounded list limits, enum values)
 - Role authority checks before mutations
 - Lifecycle transition validation
 - `close_requires_artifact` rule enforcement
@@ -852,7 +852,7 @@ The `db/pool.rs` module creates a `PgPool` with:
 - Repository operations and centralized role authorization are implemented; broader service-layer business logic remains pending
 - Frontend view modules exist, but the active entrypoint still exposes only signal capture
 - The dedicated lifecycle module remains a placeholder; transition logic currently lives outside that layer
-- Rust coverage includes typed IDs, fail-closed model transitions, role capabilities, IPC authority decisions, and fail-closed role resolution; PostgreSQL contracts cover append-only lifecycle projections
+- Rust coverage includes typed IDs, fail-closed IPC input validation, model transitions, role capabilities, IPC authority decisions, and fail-closed role resolution; PostgreSQL contracts cover append-only lifecycle projections
 - CI covers frontend build, documentation and authority checks, Rust tests/formatting, migration replay, and the PostgreSQL append-only contract
 
 ### Critical Constraints
@@ -867,8 +867,8 @@ The `db/pool.rs` module creates a `PgPool` with:
 1. Expand the service layer beyond its centralized role-authority checks
 2. Implement the dedicated lifecycle state-machine layer
 3. Connect the existing router and management views to the active frontend entrypoint
-4. Add direct tests for IPC input validation
-5. Add repository integration cases beyond the append-only database contract
+4. Add repository integration cases beyond the append-only database contract
+5. Add command-level tests around database error translation
 
 ### Dev Quickref
 
