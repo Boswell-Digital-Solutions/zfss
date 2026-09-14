@@ -5,6 +5,7 @@
 
 use crate::models::{ApprovalState, Response, ResponseChannel, ResponseCreate, ResponseSummary};
 use crate::repository;
+use crate::service::error::repository_error;
 use crate::service::input::{require_id, require_text};
 use crate::service::{AuthorityAction, require_authority};
 use crate::state::AppState;
@@ -41,14 +42,14 @@ pub async fn draft_response(
     // Verify signal exists
     repository::get_signal(&state.pool, &signal_id)
         .await
-        .map_err(|e| format!("Failed to get signal: {}", e))?
+        .map_err(|error| repository_error("get signal for response", error))?
         .ok_or_else(|| format!("Signal not found: {}", signal_id))?;
 
     // Verify issue exists if provided
     if let Some(ref iss_id) = issue_id {
         repository::get_issue(&state.pool, iss_id)
             .await
-            .map_err(|e| format!("Failed to get issue: {}", e))?
+            .map_err(|error| repository_error("get issue for response", error))?
             .ok_or_else(|| format!("Issue not found: {}", iss_id))?;
     }
 
@@ -66,7 +67,7 @@ pub async fn draft_response(
         &drafted_by,
     )
     .await
-    .map_err(|e| format!("Failed to draft response: {}", e))
+    .map_err(|error| repository_error("draft response", error))
 }
 
 /// Get a single response by ID
@@ -78,7 +79,7 @@ pub async fn get_response(
     require_id(&id, "id", "rsp")?;
     repository::get_response(&state.pool, &id)
         .await
-        .map_err(|e| format!("Failed to get response: {}", e))
+        .map_err(|error| repository_error("get response", error))
 }
 
 /// List all responses for a signal
@@ -90,7 +91,7 @@ pub async fn list_responses_for_signal(
     require_id(&signal_id, "signal_id", "sig")?;
     repository::list_responses_for_signal(&state.pool, &signal_id)
         .await
-        .map_err(|e| format!("Failed to list responses: {}", e))
+        .map_err(|error| repository_error("list responses", error))
 }
 
 /// Submit response for approval (draft -> pending)
@@ -111,7 +112,7 @@ pub async fn submit_response(
         None,
     )
     .await
-    .map_err(|e| format!("Failed to submit response: {}", e))
+    .map_err(|error| repository_error("submit response", error))
 }
 
 /// Approve a response (Steward only)
@@ -135,7 +136,7 @@ pub async fn approve_response(
         None,
     )
     .await
-    .map_err(|e| format!("Failed to approve response: {}", e))
+    .map_err(|error| repository_error("approve response", error))
 }
 
 /// Block a response (Steward only)
@@ -162,7 +163,7 @@ pub async fn block_response(
         Some(&reason),
     )
     .await
-    .map_err(|e| format!("Failed to block response: {}", e))
+    .map_err(|error| repository_error("block response", error))
 }
 
 /// Mark a response as sent (after approval)
@@ -183,5 +184,5 @@ pub async fn mark_response_sent(
         None,
     )
     .await
-    .map_err(|e| format!("Failed to mark response as sent: {}", e))
+    .map_err(|error| repository_error("mark response sent", error))
 }

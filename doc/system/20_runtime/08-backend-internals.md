@@ -70,6 +70,7 @@ Business logic enforcement:
 - Role authority checks before mutations
 - Lifecycle transition validation
 - `close_requires_artifact` rule enforcement
+- Stable, redacted translation of repository and database failures at the IPC boundary
 
 ### Repository Integration Contract
 

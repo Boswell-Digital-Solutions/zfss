@@ -4,6 +4,7 @@
 
 use crate::models::{Classification, Issue, IssueCreate, IssueStatus, IssueSummary, Severity};
 use crate::repository;
+use crate::service::error::repository_error;
 use crate::service::input::{list_limit, require_id, require_text};
 use crate::service::{AuthorityAction, require_authority};
 use crate::state::AppState;
@@ -53,7 +54,7 @@ pub async fn create_issue(
         &created_by,
     )
     .await
-    .map_err(|e| format!("Failed to create issue: {}", e))
+    .map_err(|error| repository_error("create issue", error))
 }
 
 /// List issues with optional status filter
@@ -76,7 +77,7 @@ pub async fn list_issues(
 
     repository::list_issues(&state.pool, status_filter, limit)
         .await
-        .map_err(|e| format!("Failed to list issues: {}", e))
+        .map_err(|error| repository_error("list issues", error))
 }
 
 /// Get a single issue by ID
@@ -88,7 +89,7 @@ pub async fn get_issue(
     require_id(&id, "id", "iss")?;
     repository::get_issue(&state.pool, &id)
         .await
-        .map_err(|e| format!("Failed to get issue: {}", e))
+        .map_err(|error| repository_error("get issue", error))
 }
 
 /// Transition an issue's status
@@ -116,13 +117,13 @@ pub async fn transition_issue(
 
         let issue = repository::get_issue(&state.pool, &issue_id)
             .await
-            .map_err(|e| format!("Failed to get issue: {}", e))?
+            .map_err(|error| repository_error("get issue for closure", error))?
             .ok_or_else(|| format!("Issue not found: {}", issue_id))?;
 
         if issue.close_requires_artifact {
             let has_verified = repository::has_verified_artifact(&state.pool, &issue_id)
                 .await
-                .map_err(|e| format!("Failed to check artifacts: {}", e))?;
+                .map_err(|error| repository_error("check closure artifacts", error))?;
 
             if !has_verified {
                 return Err(
@@ -143,5 +144,5 @@ pub async fn transition_issue(
         reason.as_deref(),
     )
     .await
-    .map_err(|e| format!("Failed to transition issue: {}", e))
+    .map_err(|error| repository_error("transition issue", error))
 }

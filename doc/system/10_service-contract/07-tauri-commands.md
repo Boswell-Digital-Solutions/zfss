@@ -70,7 +70,7 @@ pub struct AppState {
 
 ### Error Handling
 
-Command errors are serialized as strings back to the frontend. All errors propagated via `Result<T, String>` return type.
+Commands return `Result<T, String>`, but repository failures pass through a centralized redaction boundary. Public failures use stable categories (`ZFSS_NOT_FOUND`, `ZFSS_CONFLICT`, `ZFSS_REPOSITORY_UNAVAILABLE`, or `ZFSS_INTERNAL`) plus the failed operation; raw SQLx messages, connection strings, hosts, and credentials are never returned to the frontend.
 
 ### Global Hotkey
 
