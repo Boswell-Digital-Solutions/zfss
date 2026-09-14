@@ -8,7 +8,7 @@
 | --- | --- | --- |
 | Documentation normalization | Complete | Protocol-required baseline surfaces are present |
 | Module catalog expansion | Pending | Expand exact routes, tables, and runtime contracts from code |
-| QA alignment | Pending | Add repo-specific testing tiers and pre-flight checks |
+| QA alignment | In progress | CI baseline and PostgreSQL contract are active; IPC and lifecycle coverage remain |
 
 ## Phase 0 — Documentation Normalization
 
@@ -29,3 +29,8 @@
 ## Phase 2 — Verification Hardening
 
 **Goal:** align repo-specific testing, QA, and handover documentation with current implementation reality.
+
+**Delivered:** frontend build, documentation/authority validation, Rust unit-test and formatting
+gates, full migration replay, and a disposable PostgreSQL append-only contract test.
+
+**Remaining:** direct IPC, role-authority, lifecycle-transition, and repository integration tests.
