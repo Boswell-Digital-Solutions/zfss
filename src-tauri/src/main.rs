@@ -19,35 +19,35 @@ use crate::config::Settings;
 use crate::constraints::HOTKEY_DEBOUNCE_MS;
 use crate::db::create_pool;
 use crate::ipc::{
-    // Artifact commands
-    create_artifact,
-    get_artifact,
-    has_verified_artifact,
-    list_artifacts_for_issue,
-    verify_artifact,
-    // Decision commands
-    get_current_decision,
-    get_decision,
-    list_decisions_for_issue,
-    record_decision,
-    // Issue commands
-    create_issue,
-    get_issue,
-    list_issues,
-    transition_issue,
     // Response commands
     approve_response,
     block_response,
-    draft_response,
-    get_response,
-    list_responses_for_signal,
-    mark_response_sent,
-    submit_response,
     // Signal commands
     capture_signal,
+    // Artifact commands
+    create_artifact,
+    // Issue commands
+    create_issue,
+    draft_response,
+    get_artifact,
+    // Decision commands
+    get_current_decision,
+    get_decision,
+    get_issue,
+    get_response,
     get_signal,
+    has_verified_artifact,
     link_signal_to_issue,
+    list_artifacts_for_issue,
+    list_decisions_for_issue,
+    list_issues,
+    list_responses_for_signal,
     list_signals,
+    mark_response_sent,
+    record_decision,
+    submit_response,
+    transition_issue,
+    verify_artifact,
 };
 use crate::state::AppState;
 

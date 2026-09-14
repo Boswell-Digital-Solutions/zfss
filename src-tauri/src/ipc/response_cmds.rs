@@ -3,7 +3,9 @@
 //! Commands for drafting, approving, and sending responses.
 //! Responses follow a workflow: draft -> pending -> approved -> sent (or blocked)
 
-use crate::models::{ApprovalState, Response, ResponseChannel, ResponseCreate, ResponseSummary, UserRole};
+use crate::models::{
+    ApprovalState, Response, ResponseChannel, ResponseCreate, ResponseSummary, UserRole,
+};
 use crate::repository;
 use crate::state::AppState;
 use std::sync::Arc;
