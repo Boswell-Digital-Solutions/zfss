@@ -55,6 +55,22 @@ jobs:
 
   rust:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: zfss_rust_test
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d zfss_rust_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      ZFSS_TEST_DATABASE_URL: postgresql://postgres:postgres@localhost:5432/zfss_rust_test
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -69,6 +85,11 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libwebkit2gtk-4.1-dev libappindicator3-dev librsvg2-dev patchelf
+      - name: Apply repository test migrations
+        run: |
+          for migration in migrations/*.sql; do
+            psql "$ZFSS_TEST_DATABASE_URL" --set ON_ERROR_STOP=1 --file "$migration"
+          done
       # ZFSS does not yet commit src-tauri/Cargo.lock. Do not use --locked until
       # a separately generated and reviewed application lockfile is admitted.
       - run: cargo test --manifest-path src-tauri/Cargo.toml

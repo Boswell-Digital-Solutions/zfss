@@ -71,6 +71,10 @@ Business logic enforcement:
 - Lifecycle transition validation
 - `close_requires_artifact` rule enforcement
 
+### Repository Integration Contract
+
+CI runs the Rust repository layer against an ephemeral PostgreSQL 16 database through the complete Signal → Issue → Decision → Artifact → Response lifecycle. The contract verifies projected state, signal-link counts, artifact verification, and response approval metadata.
+
 ### Constraints (constraints.rs)
 
 | Constant | Value | Purpose |
