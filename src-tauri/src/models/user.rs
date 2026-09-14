@@ -142,15 +142,21 @@ mod tests {
             ),
             (
                 Operator,
-                [true, true, true, false, false, false, true, false, false, false],
+                [
+                    true, true, true, false, false, false, true, false, false, false,
+                ],
             ),
             (
                 Engineer,
-                [true, false, false, false, true, false, false, false, false, false],
+                [
+                    true, false, false, false, true, false, false, false, false, false,
+                ],
             ),
             (
                 AI,
-                [true, false, false, false, false, false, true, false, false, false],
+                [
+                    true, false, false, false, false, false, true, false, false, false,
+                ],
             ),
         ];
 

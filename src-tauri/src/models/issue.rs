@@ -186,7 +186,13 @@ mod tests {
     #[test]
     fn issue_transition_matrix_is_fail_closed() {
         use IssueStatus::*;
-        let states = [PendingDecision, Decided, InProgress, ReadyForVerification, Closed];
+        let states = [
+            PendingDecision,
+            Decided,
+            InProgress,
+            ReadyForVerification,
+            Closed,
+        ];
         let allowed = [
             (PendingDecision, Decided),
             (Decided, InProgress),
