@@ -4,6 +4,7 @@
 
 use crate::config::Settings;
 use crate::models::{CurrentUser, UserRole};
+use crate::service::error::identity_error;
 use sqlx::PgPool;
 use std::sync::Mutex;
 use std::time::Instant;
@@ -57,18 +58,14 @@ impl AppState {
         let guard = self
             .current_user
             .lock()
-            .map_err(|_| "current user state is unavailable".to_string())?;
+            .map_err(|_| identity_error("current user state is unavailable"))?;
 
         if let Some(user) = guard.as_ref() {
             return Ok(user.role);
         }
 
-        UserRole::from_str(&self.settings.current_user_role).ok_or_else(|| {
-            format!(
-                "invalid configured user role: {}",
-                self.settings.current_user_role
-            )
-        })
+        UserRole::from_str(&self.settings.current_user_role)
+            .ok_or_else(|| identity_error("configured user role is invalid"))
     }
 
     /// Get monotonic milliseconds since app start
@@ -106,7 +103,10 @@ mod tests {
     #[tokio::test]
     async fn invalid_configured_role_fails_closed() {
         let state = state_with_configured_role("Admin");
-        assert!(state.current_user_role().is_err());
+        assert_eq!(
+            state.current_user_role(),
+            Err("ZFSS_IDENTITY_UNAVAILABLE: configured user role is invalid".to_string())
+        );
     }
 
     #[tokio::test]

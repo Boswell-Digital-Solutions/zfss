@@ -5,7 +5,7 @@
 use crate::constraints::MAX_RAW_TEXT_BYTES;
 use crate::models::{Signal, SignalCreate, SignalSource, SignalStatus};
 use crate::repository;
-use crate::service::error::repository_error;
+use crate::service::error::{repository_error, validation_error};
 use crate::service::input::{list_limit, require_id, require_text, truncate_utf8};
 use crate::service::{AuthorityAction, require_authority};
 use crate::state::AppState;
@@ -31,10 +31,10 @@ pub async fn capture_signal(
 ) -> Result<CaptureResult, String> {
     // Validate source
     let source_enum = SignalSource::from_str(&source).ok_or_else(|| {
-        format!(
+        validation_error(format!(
             "Invalid source: '{}'. Valid sources: in_app, email, dm, call, internal, partner, monitoring",
             source
-        )
+        ))
     })?;
 
     // Validate raw_text is not empty
@@ -81,7 +81,7 @@ pub async fn list_signals(
     let status_filter = if let Some(status_value) = status {
         Some(
             SignalStatus::from_str(&status_value)
-                .ok_or_else(|| format!("Invalid status: '{}'", status_value))?,
+                .ok_or_else(|| validation_error(format!("Invalid status: '{}'", status_value)))?,
         )
     } else {
         None

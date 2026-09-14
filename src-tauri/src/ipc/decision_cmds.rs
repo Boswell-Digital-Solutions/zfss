@@ -6,7 +6,7 @@
 use crate::constraints::DEFAULT_STEWARD_DEADLINE_DAYS;
 use crate::models::{Decision, DecisionCreate, DecisionHistoryEntry, DecisionType};
 use crate::repository;
-use crate::service::error::repository_error;
+use crate::service::error::{not_found_error, repository_error, validation_error};
 use crate::service::input::{require_id, require_text};
 use crate::service::{AuthorityAction, require_authority};
 use crate::state::AppState;
@@ -28,22 +28,24 @@ pub async fn record_decision(
     require_id(&issue_id, "issue_id", "iss")?;
     require_text(&rationale, "rationale", 10, None)?;
     if !matches!(steward_deadline_days, None | Some(1..=3650)) {
-        return Err("steward_deadline_days must be between 1 and 3650".to_string());
+        return Err(validation_error(
+            "steward_deadline_days must be between 1 and 3650",
+        ));
     }
 
     // Parse decision type
     let decision_type_enum = DecisionType::from_str(&decision_type).ok_or_else(|| {
-        format!(
+        validation_error(format!(
             "Invalid decision_type: '{}'. Valid: FixNow, FixLater, DocumentClarify, WontFix, DeEscalate",
             decision_type
-        )
+        ))
     })?;
 
     // Verify issue exists
     let issue = repository::get_issue(&state.pool, &issue_id)
         .await
         .map_err(|error| repository_error("get issue for decision", error))?
-        .ok_or_else(|| format!("Issue not found: {}", issue_id))?;
+        .ok_or_else(|| not_found_error("issue"))?;
 
     let decided_by = state.current_user_id();
 

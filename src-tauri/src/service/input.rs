@@ -1,5 +1,7 @@
 //! Fail-closed validation for values crossing the Tauri IPC boundary.
 
+use crate::service::error::validation_error;
+
 pub fn require_text(
     value: &str,
     field: &str,
@@ -8,13 +10,15 @@ pub fn require_text(
 ) -> Result<(), String> {
     let count = value.trim().chars().count();
     if count < min_chars {
-        return Err(format!(
+        return Err(validation_error(format!(
             "{field} must contain at least {min_chars} character(s)"
-        ));
+        )));
     }
     if let Some(max) = max_chars {
         if count > max {
-            return Err(format!("{field} cannot exceed {max} characters"));
+            return Err(validation_error(format!(
+                "{field} cannot exceed {max} characters"
+            )));
         }
     }
     Ok(())
@@ -24,9 +28,11 @@ pub fn require_id(value: &str, field: &str, prefix: &str) -> Result<(), String> 
     let expected = format!("{prefix}_");
     let suffix = value
         .strip_prefix(&expected)
-        .ok_or_else(|| format!("{field} must be a valid {prefix} ID"))?;
+        .ok_or_else(|| validation_error(format!("{field} must be a valid {prefix} ID")))?;
     if suffix.len() < 16 || !suffix.chars().all(|c| c.is_ascii_alphanumeric()) {
-        return Err(format!("{field} must be a valid {prefix} ID"));
+        return Err(validation_error(format!(
+            "{field} must be a valid {prefix} ID"
+        )));
     }
     Ok(())
 }
@@ -34,7 +40,7 @@ pub fn require_id(value: &str, field: &str, prefix: &str) -> Result<(), String> 
 pub fn list_limit(value: Option<i32>) -> Result<i64, String> {
     match value.unwrap_or(50) {
         limit @ 1..=100 => Ok(i64::from(limit)),
-        _ => Err("limit must be between 1 and 100".to_string()),
+        _ => Err(validation_error("limit must be between 1 and 100")),
     }
 }
 
@@ -75,7 +81,10 @@ mod tests {
     #[test]
     fn text_limits_count_characters_after_trimming() {
         assert!(require_text("  ten chars!  ", "rationale", 10, None).is_ok());
-        assert!(require_text("  ", "title", 1, Some(500)).is_err());
+        assert_eq!(
+            require_text("  ", "title", 1, Some(500)),
+            Err("ZFSS_VALIDATION: title must contain at least 1 character(s)".to_string())
+        );
         assert!(require_text("ééé", "field", 4, None).is_err());
     }
 

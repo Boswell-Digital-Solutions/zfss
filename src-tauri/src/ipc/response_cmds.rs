@@ -5,7 +5,7 @@
 
 use crate::models::{ApprovalState, Response, ResponseChannel, ResponseCreate, ResponseSummary};
 use crate::repository;
-use crate::service::error::repository_error;
+use crate::service::error::{not_found_error, repository_error, validation_error};
 use crate::service::input::{require_id, require_text};
 use crate::service::{AuthorityAction, require_authority};
 use crate::state::AppState;
@@ -33,24 +33,24 @@ pub async fn draft_response(
 
     // Parse channel
     let channel_enum = ResponseChannel::from_str(&channel).ok_or_else(|| {
-        format!(
+        validation_error(format!(
             "Invalid channel: '{}'. Valid: email, in_app, dm, phone, other",
             channel
-        )
+        ))
     })?;
 
     // Verify signal exists
     repository::get_signal(&state.pool, &signal_id)
         .await
         .map_err(|error| repository_error("get signal for response", error))?
-        .ok_or_else(|| format!("Signal not found: {}", signal_id))?;
+        .ok_or_else(|| not_found_error("signal"))?;
 
     // Verify issue exists if provided
     if let Some(ref iss_id) = issue_id {
         repository::get_issue(&state.pool, iss_id)
             .await
             .map_err(|error| repository_error("get issue for response", error))?
-            .ok_or_else(|| format!("Issue not found: {}", iss_id))?;
+            .ok_or_else(|| not_found_error("issue"))?;
     }
 
     let drafted_by = state.current_user_id();
