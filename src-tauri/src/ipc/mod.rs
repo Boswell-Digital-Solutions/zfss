@@ -25,12 +25,12 @@ pub use signal_cmds::{capture_signal, get_signal, link_signal_to_issue, list_sig
 #[cfg(test)]
 mod command_error_contract_tests {
     use super::{capture_signal, create_issue};
+    use crate::config::Settings;
+    use crate::state::AppState;
     use crate::{
         __cmd__capture_signal, __cmd__create_issue, __tauri_command_name_capture_signal,
         __tauri_command_name_create_issue,
     };
-    use crate::config::Settings;
-    use crate::state::AppState;
     use serde_json::{Value, json};
     use sqlx::postgres::PgPoolOptions;
     use std::sync::Arc;
