@@ -36,7 +36,7 @@ mod command_error_contract_tests {
     use std::sync::Arc;
     use tauri::ipc::{CallbackFn, InvokeBody};
     use tauri::test::{
-        MockRuntime, INVOKE_KEY, get_ipc_response, mock_builder, mock_context, noop_assets,
+        INVOKE_KEY, MockRuntime, get_ipc_response, mock_builder, mock_context, noop_assets,
     };
     use tauri::webview::InvokeRequest;
     use tauri::{App, WebviewWindow, WebviewWindowBuilder};
