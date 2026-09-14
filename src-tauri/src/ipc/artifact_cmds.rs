@@ -5,7 +5,7 @@
 
 use crate::models::{Artifact, ArtifactCreate, ArtifactSummary, ArtifactType};
 use crate::repository;
-use crate::service::error::{not_found_error, repository_error, validation_error};
+use crate::service::error::{IpcError, not_found_error, repository_error, validation_error};
 use crate::service::input::{require_id, require_text};
 use crate::service::{AuthorityAction, require_authority};
 use crate::state::AppState;
@@ -22,7 +22,7 @@ pub async fn create_artifact(
     ref_url: Option<String>,
     note: Option<String>,
     state: State<'_, Arc<AppState>>,
-) -> Result<Artifact, String> {
+) -> Result<Artifact, IpcError> {
     // Enforce Engineer or Steward authority
     require_authority(state.current_user_role()?, AuthorityAction::CreateArtifact)?;
 
@@ -69,7 +69,7 @@ pub async fn create_artifact(
 pub async fn get_artifact(
     id: String,
     state: State<'_, Arc<AppState>>,
-) -> Result<Option<Artifact>, String> {
+) -> Result<Option<Artifact>, IpcError> {
     require_id(&id, "id", "art")?;
     repository::get_artifact(&state.pool, &id)
         .await
@@ -81,7 +81,7 @@ pub async fn get_artifact(
 pub async fn list_artifacts_for_issue(
     issue_id: String,
     state: State<'_, Arc<AppState>>,
-) -> Result<Vec<ArtifactSummary>, String> {
+) -> Result<Vec<ArtifactSummary>, IpcError> {
     require_id(&issue_id, "issue_id", "iss")?;
     repository::list_artifacts_for_issue(&state.pool, &issue_id)
         .await
@@ -93,7 +93,7 @@ pub async fn list_artifacts_for_issue(
 pub async fn verify_artifact(
     artifact_id: String,
     state: State<'_, Arc<AppState>>,
-) -> Result<Artifact, String> {
+) -> Result<Artifact, IpcError> {
     // Enforce Steward-only authority
     require_authority(state.current_user_role()?, AuthorityAction::VerifyArtifact)?;
     require_id(&artifact_id, "artifact_id", "art")?;
@@ -110,7 +110,7 @@ pub async fn verify_artifact(
 pub async fn has_verified_artifact(
     issue_id: String,
     state: State<'_, Arc<AppState>>,
-) -> Result<bool, String> {
+) -> Result<bool, IpcError> {
     require_id(&issue_id, "issue_id", "iss")?;
     repository::has_verified_artifact(&state.pool, &issue_id)
         .await

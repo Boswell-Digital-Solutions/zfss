@@ -71,6 +71,7 @@ Business logic enforcement:
 - Lifecycle transition validation
 - `close_requires_artifact` rule enforcement
 - Stable public codes for validation, authority, identity, lifecycle, repository, and database failures at the IPC boundary
+- A typed `IpcError { code, message }` envelope serialized directly by Tauri
 - Central redaction of repository details before failures cross IPC
 
 ### Repository Integration Contract

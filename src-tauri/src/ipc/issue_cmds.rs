@@ -4,7 +4,9 @@
 
 use crate::models::{Classification, Issue, IssueCreate, IssueStatus, IssueSummary, Severity};
 use crate::repository;
-use crate::service::error::{conflict_error, not_found_error, repository_error, validation_error};
+use crate::service::error::{
+    IpcError, conflict_error, not_found_error, repository_error, validation_error,
+};
 use crate::service::input::{list_limit, require_id, require_text};
 use crate::service::{AuthorityAction, require_authority};
 use crate::state::AppState;
@@ -19,7 +21,7 @@ pub async fn create_issue(
     classification: String,
     severity: String,
     state: State<'_, Arc<AppState>>,
-) -> Result<Issue, String> {
+) -> Result<Issue, IpcError> {
     require_authority(state.current_user_role()?, AuthorityAction::CreateIssue)?;
 
     // Validate title
@@ -63,7 +65,7 @@ pub async fn list_issues(
     status: Option<String>,
     limit: Option<i32>,
     state: State<'_, Arc<AppState>>,
-) -> Result<Vec<IssueSummary>, String> {
+) -> Result<Vec<IssueSummary>, IpcError> {
     let limit = list_limit(limit)?;
 
     let status_filter = if let Some(status_value) = status {
@@ -85,7 +87,7 @@ pub async fn list_issues(
 pub async fn get_issue(
     id: String,
     state: State<'_, Arc<AppState>>,
-) -> Result<Option<Issue>, String> {
+) -> Result<Option<Issue>, IpcError> {
     require_id(&id, "id", "iss")?;
     repository::get_issue(&state.pool, &id)
         .await
@@ -99,7 +101,7 @@ pub async fn transition_issue(
     new_status: String,
     reason: Option<String>,
     state: State<'_, Arc<AppState>>,
-) -> Result<Issue, String> {
+) -> Result<Issue, IpcError> {
     require_id(&issue_id, "issue_id", "iss")?;
     if let Some(value) = reason.as_deref() {
         require_text(value, "reason", 1, None)?;

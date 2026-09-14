@@ -1,7 +1,7 @@
 //! Central role-authority checks for mutating IPC commands.
 
 use crate::models::UserRole;
-use crate::service::error::forbidden_error;
+use crate::service::error::{IpcError, forbidden_error};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AuthorityAction {
@@ -30,7 +30,7 @@ impl AuthorityAction {
     }
 }
 
-pub fn require_authority(role: UserRole, action: AuthorityAction) -> Result<(), String> {
+pub fn require_authority(role: UserRole, action: AuthorityAction) -> Result<(), IpcError> {
     let allowed = match action {
         AuthorityAction::LinkSignal => role.can_link_signal(),
         AuthorityAction::CreateIssue => role.can_create_issue(),
@@ -57,6 +57,7 @@ pub fn require_authority(role: UserRole, action: AuthorityAction) -> Result<(), 
 mod tests {
     use super::{AuthorityAction, require_authority};
     use crate::models::UserRole;
+    use crate::service::error::{IpcError, IpcErrorCode};
 
     #[test]
     fn ipc_authority_matrix_is_fail_closed() {
@@ -106,7 +107,10 @@ mod tests {
     fn denied_actions_return_the_public_forbidden_code() {
         assert_eq!(
             require_authority(UserRole::Engineer, AuthorityAction::CloseIssue),
-            Err("ZFSS_FORBIDDEN: Permission denied: role Engineer cannot close issues".to_string())
+            Err(IpcError::new(
+                IpcErrorCode::Forbidden,
+                "Permission denied: role Engineer cannot close issues"
+            ))
         );
     }
 }

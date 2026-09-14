@@ -6,7 +6,7 @@
 use crate::constraints::DEFAULT_STEWARD_DEADLINE_DAYS;
 use crate::models::{Decision, DecisionCreate, DecisionHistoryEntry, DecisionType};
 use crate::repository;
-use crate::service::error::{not_found_error, repository_error, validation_error};
+use crate::service::error::{IpcError, not_found_error, repository_error, validation_error};
 use crate::service::input::{require_id, require_text};
 use crate::service::{AuthorityAction, require_authority};
 use crate::state::AppState;
@@ -21,7 +21,7 @@ pub async fn record_decision(
     rationale: String,
     steward_deadline_days: Option<i32>,
     state: State<'_, Arc<AppState>>,
-) -> Result<Decision, String> {
+) -> Result<Decision, IpcError> {
     // Enforce Steward-only authority
     require_authority(state.current_user_role()?, AuthorityAction::MakeDecision)?;
 
@@ -68,7 +68,7 @@ pub async fn record_decision(
 pub async fn get_decision(
     id: String,
     state: State<'_, Arc<AppState>>,
-) -> Result<Option<Decision>, String> {
+) -> Result<Option<Decision>, IpcError> {
     require_id(&id, "id", "dec")?;
     repository::get_decision(&state.pool, &id)
         .await
@@ -80,7 +80,7 @@ pub async fn get_decision(
 pub async fn list_decisions_for_issue(
     issue_id: String,
     state: State<'_, Arc<AppState>>,
-) -> Result<Vec<DecisionHistoryEntry>, String> {
+) -> Result<Vec<DecisionHistoryEntry>, IpcError> {
     require_id(&issue_id, "issue_id", "iss")?;
     repository::list_decisions_for_issue(&state.pool, &issue_id)
         .await
@@ -92,7 +92,7 @@ pub async fn list_decisions_for_issue(
 pub async fn get_current_decision(
     issue_id: String,
     state: State<'_, Arc<AppState>>,
-) -> Result<Option<Decision>, String> {
+) -> Result<Option<Decision>, IpcError> {
     require_id(&issue_id, "issue_id", "iss")?;
     repository::get_current_decision_for_issue(&state.pool, &issue_id)
         .await

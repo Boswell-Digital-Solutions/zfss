@@ -1,13 +1,13 @@
 //! Fail-closed validation for values crossing the Tauri IPC boundary.
 
-use crate::service::error::validation_error;
+use crate::service::error::{IpcError, validation_error};
 
 pub fn require_text(
     value: &str,
     field: &str,
     min_chars: usize,
     max_chars: Option<usize>,
-) -> Result<(), String> {
+) -> Result<(), IpcError> {
     let count = value.trim().chars().count();
     if count < min_chars {
         return Err(validation_error(format!(
@@ -24,7 +24,7 @@ pub fn require_text(
     Ok(())
 }
 
-pub fn require_id(value: &str, field: &str, prefix: &str) -> Result<(), String> {
+pub fn require_id(value: &str, field: &str, prefix: &str) -> Result<(), IpcError> {
     let expected = format!("{prefix}_");
     let suffix = value
         .strip_prefix(&expected)
@@ -37,7 +37,7 @@ pub fn require_id(value: &str, field: &str, prefix: &str) -> Result<(), String> 
     Ok(())
 }
 
-pub fn list_limit(value: Option<i32>) -> Result<i64, String> {
+pub fn list_limit(value: Option<i32>) -> Result<i64, IpcError> {
     match value.unwrap_or(50) {
         limit @ 1..=100 => Ok(i64::from(limit)),
         _ => Err(validation_error("limit must be between 1 and 100")),
@@ -83,7 +83,10 @@ mod tests {
         assert!(require_text("  ten chars!  ", "rationale", 10, None).is_ok());
         assert_eq!(
             require_text("  ", "title", 1, Some(500)),
-            Err("ZFSS_VALIDATION: title must contain at least 1 character(s)".to_string())
+            Err(IpcError::new(
+                crate::service::error::IpcErrorCode::Validation,
+                "title must contain at least 1 character(s)"
+            ))
         );
         assert!(require_text("ééé", "field", 4, None).is_err());
     }

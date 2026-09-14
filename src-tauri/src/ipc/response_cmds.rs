@@ -5,7 +5,7 @@
 
 use crate::models::{ApprovalState, Response, ResponseChannel, ResponseCreate, ResponseSummary};
 use crate::repository;
-use crate::service::error::{not_found_error, repository_error, validation_error};
+use crate::service::error::{IpcError, not_found_error, repository_error, validation_error};
 use crate::service::input::{require_id, require_text};
 use crate::service::{AuthorityAction, require_authority};
 use crate::state::AppState;
@@ -21,7 +21,7 @@ pub async fn draft_response(
     channel: String,
     body: String,
     state: State<'_, Arc<AppState>>,
-) -> Result<Response, String> {
+) -> Result<Response, IpcError> {
     require_authority(state.current_user_role()?, AuthorityAction::DraftResponse)?;
 
     require_id(&signal_id, "signal_id", "sig")?;
@@ -75,7 +75,7 @@ pub async fn draft_response(
 pub async fn get_response(
     id: String,
     state: State<'_, Arc<AppState>>,
-) -> Result<Option<Response>, String> {
+) -> Result<Option<Response>, IpcError> {
     require_id(&id, "id", "rsp")?;
     repository::get_response(&state.pool, &id)
         .await
@@ -87,7 +87,7 @@ pub async fn get_response(
 pub async fn list_responses_for_signal(
     signal_id: String,
     state: State<'_, Arc<AppState>>,
-) -> Result<Vec<ResponseSummary>, String> {
+) -> Result<Vec<ResponseSummary>, IpcError> {
     require_id(&signal_id, "signal_id", "sig")?;
     repository::list_responses_for_signal(&state.pool, &signal_id)
         .await
@@ -99,7 +99,7 @@ pub async fn list_responses_for_signal(
 pub async fn submit_response(
     response_id: String,
     state: State<'_, Arc<AppState>>,
-) -> Result<Response, String> {
+) -> Result<Response, IpcError> {
     require_id(&response_id, "response_id", "rsp")?;
     let actor = state.current_user_id();
 
@@ -120,7 +120,7 @@ pub async fn submit_response(
 pub async fn approve_response(
     response_id: String,
     state: State<'_, Arc<AppState>>,
-) -> Result<Response, String> {
+) -> Result<Response, IpcError> {
     // Enforce Steward-only authority
     require_authority(state.current_user_role()?, AuthorityAction::ApproveResponse)?;
     require_id(&response_id, "response_id", "rsp")?;
@@ -145,7 +145,7 @@ pub async fn block_response(
     response_id: String,
     reason: String,
     state: State<'_, Arc<AppState>>,
-) -> Result<Response, String> {
+) -> Result<Response, IpcError> {
     // Enforce Steward-only authority
     require_authority(state.current_user_role()?, AuthorityAction::ApproveResponse)?;
 
@@ -171,7 +171,7 @@ pub async fn block_response(
 pub async fn mark_response_sent(
     response_id: String,
     state: State<'_, Arc<AppState>>,
-) -> Result<Response, String> {
+) -> Result<Response, IpcError> {
     require_id(&response_id, "response_id", "rsp")?;
     let actor = state.current_user_id();
 

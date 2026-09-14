@@ -40,8 +40,8 @@
 1. Expand the service layer beyond its centralized role-authority checks
 2. Implement the dedicated lifecycle state-machine layer
 3. Connect the existing router and management views to the active frontend entrypoint
-4. Replace string return errors with a structured serializable IPC envelope
-5. Add frontend handling for stable IPC error codes
+4. Add frontend handling for the structured IPC error envelope
+5. Add command-level tests for serialized Tauri failure responses
 
 ### Dev Quickref
 
