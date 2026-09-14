@@ -1,6 +1,6 @@
 # ZFSS-Safe Database Access Layer
 
-This module is the curated “front door” for engaging DataForgeDB once it is governed by the doctrine: only append-only operations are exposed and all reads use derived views over append tables. See `zfss/src-tauri/src/repository/mod.rs` for the implementation that the IPC layer now depends on.
+This module is the curated front door for the ZFSS operational PostgreSQL store: only append-only operations are exposed and all reads use derived views over append tables. The legacy physical name `dataforge` conveys no DataForge authority. See `zfss/src-tauri/src/repository/mod.rs` for the implementation that the IPC layer now depends on.
 
 ## Append-only writer APIs
 

@@ -1,0 +1,54 @@
+schema_version: zfss.authority.v1
+status: active
+effective_date: 2026-09-14
+
+system:
+  id: zfss
+  repository: Boswell-Digital-Solutions/zfss
+  canonical_path: ecosystem/zfss
+
+operational_store:
+  owner: zfss
+  authority: product
+  lane: bds_business_local
+  purpose: feedback_operations
+  physical_database_name: dataforge
+  physical_name_status: legacy_binding
+  authority_conferred_by_name: false
+  rename_authorized: false
+
+authority_boundaries:
+  zfss:
+    owns: [feedback_signals, feedback_issues, zfss_lifecycle_events, response_drafts, local_artifact_references]
+    does_not_own: [canonical_ecosystem_memory, admitted_bds_evidence, operator_authorization, procedural_promotion]
+  forge_memory:
+    owns: [memory_candidate_lifecycle, contradiction_preservation, candidate_reconciliation, bounded_retrieval, memory_receipt_construction]
+    promotion_enabled: false
+    zfss_producer_route: not_admitted
+    zfss_consumer_route: not_admitted
+  forge_command:
+    owns: [operator_review_surface, exact_human_decision_record, bounded_authorization]
+  smith:
+    owns: [exact_digest_bound_approved_action]
+  dataforge_cloud:
+    owns: [admitted_durable_evidence, canonical_shared_memory, accepted_decisions, durable_receipts]
+  dataforge_local:
+    owns: [bounded_local_operational_memory, offline_continuity]
+    canonical_cloud_authority: false
+
+promotion:
+  default: denied
+  requires: [admitted_producer_consumer_route, preserved_lineage_and_counter_evidence, forge_command_operator_decision, smith_digest_bound_action, dataforge_boundary_validation]
+  approval_is_promotion: false
+  retention_is_promotion: false
+
+cp1_non_actions:
+  - database_rename
+  - role_rename
+  - schema_or_migration_change
+  - credential_change
+  - runtime_reconnection
+  - producer_or_consumer_admission
+  - shared_memory_promotion
+  - cross_run_learning
+  - external_mutation

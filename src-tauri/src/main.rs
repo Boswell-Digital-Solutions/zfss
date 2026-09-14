@@ -4,7 +4,8 @@
 //! ZFSS - Zen Feedback & Service System
 //!
 //! Desktop application for feedback metabolism.
-//! DataForgeDB (local PostgreSQL) is the authoritative source of truth.
+//! Local PostgreSQL is the operational source for the ZFSS feedback domain.
+//! It is not canonical ecosystem memory or admitted BDS evidence.
 
 mod config;
 mod constraints;

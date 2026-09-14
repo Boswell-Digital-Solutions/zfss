@@ -1,6 +1,7 @@
 //! PostgreSQL connection pool
 //!
-//! DataForgeDB (local PostgreSQL) is the authoritative source of truth.
+//! ZFSS local PostgreSQL connection pool.
+//! The physical database may retain a legacy `dataforge` name, which conveys no DataForge authority.
 
 use anyhow::{Context, Result};
 use sqlx::postgres::{PgPool, PgPoolOptions};

@@ -1,6 +1,8 @@
 # Render Snapshot Export (Prompt 4)
 
-Purpose: capture Render-hosted DataForgeDB data exactly as it exists, preserving insertion order, timestamps, and foreign-key dependencies so Prompt 5 can deterministically re-ingest into the local authoritative Postgres instance.
+> **Historical migration record:** `DataForgeDB` below is a legacy physical name. This plan grants no DataForge authority and authorizes no current export, import, or migration.
+
+Historical purpose: capture the Render-hosted ZFSS store exactly as it existed, preserving insertion order, timestamps, and foreign-key dependencies for deterministic re-ingest into the local ZFSS operational store.
 
 ## 1. Gather Render connection info
 

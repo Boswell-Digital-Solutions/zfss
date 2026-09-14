@@ -1,5 +1,7 @@
 # ZFSS — System Documentation
 
+> **Superseded snapshot:** The canonical compiled reference is `doc/ZFSSYSTEM.md`, generated from `doc/system/`. This legacy snapshot is retained for history and must not be used for authority decisions.
+
 **Document version:** 1.1 (2026-03-06) — Normalized to Forge Documentation Protocol v1
 **Protocol:** Forge Documentation Protocol v1
 

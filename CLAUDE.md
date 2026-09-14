@@ -22,7 +22,8 @@ Layered, append-only pipeline: frontend (`src/`, Tauri IPC `invoke`) → IPC com
 handlers (`src-tauri/src/ipc/` — signal/issue/decision/artifact/response commands)
 → service layer (`src-tauri/src/service/`, business logic + lifecycle enforcement)
 → repository layer (`src-tauri/src/repository/`, append-only — `append_signal()`,
-`append_issue()`, no UPDATE/DELETE) → PostgreSQL (local, authoritative).
+`append_issue()`, no UPDATE/DELETE) → PostgreSQL (the operational source for
+the ZFSS feedback domain, not canonical ecosystem memory or admitted BDS evidence).
 
 Capture flow: global hotkey `Ctrl+Alt+Z` opens the signal-capture window →
 `capture_signal` IPC command → `append_signal()` → INSERT. From there a Signal

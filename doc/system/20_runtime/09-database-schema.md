@@ -2,7 +2,7 @@
 
 ### Database
 
-PostgreSQL 14+ (local, authoritative). Connected via sqlx async driver with connection pooling.
+PostgreSQL 14+ (local ZFSS operational store). Connected via sqlx async driver with connection pooling. It is not canonical ecosystem memory or admitted BDS evidence.
 
 ### Tables (11)
 

@@ -1,8 +1,19 @@
-# ZFSS DataForgeDB Authority Setup
+# ZFSS Local PostgreSQL Operations
 
-Purpose: establish a local PostgreSQL instance as the sole authoritative DataForgeDB per the ZFSS doctrine (see canonical list in `zfss/README.md:17-25`) and prepare role/connection boundaries before migration.
+Purpose: document the legacy local PostgreSQL binding used as the operational source for the ZFSS feedback domain. The physical database and role names below predate the current authority ruling; they confer no DataForge authority.
 
-## 1. Create the authoritative database
+## Authority boundary
+
+- ZFSS owns its operational Signals, Issues, lifecycle events, response drafts, and local artifact references.
+- Forge Memory may derive candidate memory, preserve contradictions, and construct memory receipts. No ZFSS producer route is admitted in this slice and promotion remains disabled.
+- Forge_Command presents evidence and records the operator's bounded authorization.
+- SMITH applies only the exact digest-bound action the operator approved.
+- Cloud DataForge owns admitted durable BDS evidence, canonical shared memory, decisions, and receipts.
+- DataForge Local provides bounded offline continuity where separately admitted; it is not a competing cloud authority.
+
+This document does not authorize a rename, migration, credential change, runtime reconnection, consumer admission, or promotion.
+
+## 1. Create the legacy-bound ZFSS database
 
 Run from a bootstrapper shell with a superuser connection (e.g., `psql postgres`):
 
@@ -25,7 +36,7 @@ GRANT CREATE, TEMPORARY ON DATABASE dataforge TO dataforge_admin;
 GRANT ALL ON SCHEMA public TO dataforge_admin;
 ```
 
-## 2. Create doctrine-aligned roles
+## 2. Create legacy-named least-privilege roles
 
 ```sql
 CREATE ROLE dataforge_reader LOGIN PASSWORD '<read-password>' NOINHERIT;
@@ -66,9 +77,9 @@ GRANT INSERT ON TABLE
 TO dataforge_append;
 ```
 
-### 2.2 Cloud signal-only role
+### 2.2 Legacy remote signal-only role
 
-Cloud consumers remain stateless and may only supply `signals`. Limit them to that table (and its append-only history if needed) to enforce doctrine:
+Legacy remote clients may only supply `signals`. Limit them to that table (and its append-only history if needed). This role does not establish an admitted Cloud DataForge, Forge Memory, or external-write route:
 
 ```sql
 GRANT INSERT ON TABLE signals TO dataforge_signal_writer;
@@ -104,13 +115,13 @@ export DATAFORGE_ADMIN_DATABASE_URL="postgresql://dataforge_admin:<strong-passwo
 psql "$DATAFORGE_ADMIN_DATABASE_URL" -f zfss/migrations/001_initial_schema.sql
 ```
 
-Cloud services that previously wrote to Render must switch to the signal-only role when they submit `signals`; this prevents anyone but local appenders from changing canonical objects.
+Legacy services that previously wrote to Render must switch to the signal-only role when they submit `signals`; this prevents anyone but local appenders from changing ZFSS operational records.
 
 ## 4. Boundary notes
 
-- The local Postgres instance is the *only* authoritative store for canonical objects (`zfss/README.md:10-25`).
+- The local Postgres instance is the operational source for ZFSS objects only. It is not canonical ecosystem memory or admitted BDS evidence.
 - SQLite or Render Postgres becomes a read/replay buffer; writes are routed through the append role above.
-- Keep connection strings secret and rotate passwords as part of the cutover (Prompt 7) to ensure former Render credentials cannot write.
+- Keep connection strings secret. Any credential rotation or cutover requires separate authorization.
 
 ## 5. Immutability enforcement (Prompt 3)
 
@@ -118,4 +129,4 @@ The migration `zfss/migrations/002_append_only_enforcement.sql` registers the `z
 
 This means current code paths that mutate canonical rows (for example `link_signal_to_issue` in `zfss/src-tauri/src/ipc/signal_cmds.rs` which `UPDATE`s `signals` and `issues`) will fail until they move to append-only patterns (e.g., inserting history rows and deriving status from views). Treat trigger errors as proofs that the code must honor the doctrine rather than bypass it.
 
-The append role keeps `INSERT` privileges only, while `dataforge_admin` may still apply schema changes (extensions, new tables). Signal-only cloud clients are limited to inserting into `signals`/`signal_status_history`, keeping the ledger purely append-only and tied to the local Postgres authority.
+The append role keeps `INSERT` privileges only, while `dataforge_admin` may still apply schema changes (extensions, new tables). Signal-only legacy clients are limited to inserting into `signals`/`signal_status_history`, keeping the ZFSS operational ledger append-only without granting cross-system authority.
