@@ -1,6 +1,7 @@
 //! Central role-authority checks for mutating IPC commands.
 
 use crate::models::UserRole;
+use crate::service::error::forbidden_error;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum AuthorityAction {
@@ -44,11 +45,11 @@ pub fn require_authority(role: UserRole, action: AuthorityAction) -> Result<(), 
     if allowed {
         Ok(())
     } else {
-        Err(format!(
+        Err(forbidden_error(format!(
             "Permission denied: role {} cannot {}",
             role.as_str(),
             action.label()
-        ))
+        )))
     }
 }
 
@@ -99,5 +100,13 @@ mod tests {
                 );
             }
         }
+    }
+
+    #[test]
+    fn denied_actions_return_the_public_forbidden_code() {
+        assert_eq!(
+            require_authority(UserRole::Engineer, AuthorityAction::CloseIssue),
+            Err("ZFSS_FORBIDDEN: Permission denied: role Engineer cannot close issues".to_string())
+        );
     }
 }

@@ -4,7 +4,7 @@
 
 use crate::models::{Classification, Issue, IssueCreate, IssueStatus, IssueSummary, Severity};
 use crate::repository;
-use crate::service::error::repository_error;
+use crate::service::error::{conflict_error, not_found_error, repository_error, validation_error};
 use crate::service::input::{list_limit, require_id, require_text};
 use crate::service::{AuthorityAction, require_authority};
 use crate::state::AppState;
@@ -27,18 +27,18 @@ pub async fn create_issue(
 
     // Parse classification
     let classification_enum = Classification::from_str(&classification).ok_or_else(|| {
-        format!(
+        validation_error(format!(
             "Invalid classification: '{}'. Valid: Bug, UX, Feature, Limitation",
             classification
-        )
+        ))
     })?;
 
     // Parse severity
     let severity_enum = Severity::from_str(&severity).ok_or_else(|| {
-        format!(
+        validation_error(format!(
             "Invalid severity: '{}'. Valid: blocker, major, minor, idea",
             severity
-        )
+        ))
     })?;
 
     let created_by = state.current_user_id();
@@ -68,8 +68,9 @@ pub async fn list_issues(
 
     let status_filter = if let Some(status_value) = status {
         Some(
-            IssueStatus::from_str(&status_value)
-                .ok_or_else(|| format!("Invalid status: '{}'", status_value))?,
+            IssueStatus::from_str(&status_value).ok_or_else(|| {
+                validation_error(format!("Invalid status: '{}'", status_value))
+            })?,
         )
     } else {
         None
@@ -105,10 +106,10 @@ pub async fn transition_issue(
         require_text(value, "reason", 1, None)?;
     }
     let new_status_enum = IssueStatus::from_str(&new_status).ok_or_else(|| {
-        format!(
+        validation_error(format!(
             "Invalid status: '{}'. Valid: pending_decision, decided, in_progress, ready_for_verification, closed",
             new_status
-        )
+        ))
     })?;
 
     // Special handling for closing: check if artifact is required
@@ -118,7 +119,7 @@ pub async fn transition_issue(
         let issue = repository::get_issue(&state.pool, &issue_id)
             .await
             .map_err(|error| repository_error("get issue for closure", error))?
-            .ok_or_else(|| format!("Issue not found: {}", issue_id))?;
+            .ok_or_else(|| not_found_error("issue"))?;
 
         if issue.close_requires_artifact {
             let has_verified = repository::has_verified_artifact(&state.pool, &issue_id)
@@ -126,10 +127,9 @@ pub async fn transition_issue(
                 .map_err(|error| repository_error("check closure artifacts", error))?;
 
             if !has_verified {
-                return Err(
-                    "Cannot close issue: no verified artifact exists (close_requires_artifact = true)"
-                        .to_string(),
-                );
+                return Err(conflict_error(
+                    "cannot close issue: a verified artifact is required",
+                ));
             }
         }
     }

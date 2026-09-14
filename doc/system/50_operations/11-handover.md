@@ -40,8 +40,8 @@
 1. Expand the service layer beyond its centralized role-authority checks
 2. Implement the dedicated lifecycle state-machine layer
 3. Connect the existing router and management views to the active frontend entrypoint
-4. Extend stable error codes to validation and authority failures
-5. Replace string return errors with a structured serializable IPC envelope
+4. Replace string return errors with a structured serializable IPC envelope
+5. Add frontend handling for stable IPC error codes
 
 ### Dev Quickref
 

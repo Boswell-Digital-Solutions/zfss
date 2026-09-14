@@ -5,7 +5,7 @@
 
 use crate::models::{Artifact, ArtifactCreate, ArtifactSummary, ArtifactType};
 use crate::repository;
-use crate::service::error::repository_error;
+use crate::service::error::{not_found_error, repository_error, validation_error};
 use crate::service::input::{require_id, require_text};
 use crate::service::{AuthorityAction, require_authority};
 use crate::state::AppState;
@@ -34,17 +34,17 @@ pub async fn create_artifact(
 
     // Parse artifact type
     let artifact_type_enum = ArtifactType::from_str(&artifact_type).ok_or_else(|| {
-        format!(
+        validation_error(format!(
             "Invalid artifact_type: '{}'. Valid: Code, Logic, Knowledge, Test, Law",
             artifact_type
-        )
+        ))
     })?;
 
     // Verify issue exists
     repository::get_issue(&state.pool, &issue_id)
         .await
         .map_err(|error| repository_error("get issue for artifact", error))?
-        .ok_or_else(|| format!("Issue not found: {}", issue_id))?;
+        .ok_or_else(|| not_found_error("issue"))?;
 
     let created_by = state.current_user_id();
 
