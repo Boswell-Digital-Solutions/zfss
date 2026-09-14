@@ -26,7 +26,7 @@
 - Frontend view modules exist, but the active entrypoint still exposes only signal capture
 - The dedicated lifecycle module remains a placeholder; transition logic currently lives outside that layer
 - Rust coverage includes typed IDs, fail-closed IPC input validation, redacted repository-error translation, model transitions, role capabilities, IPC authority decisions, fail-closed role resolution, and a PostgreSQL-backed end-to-end repository lifecycle; SQL contracts cover append-only projections
-- CI covers frontend build, documentation and authority checks, Rust tests/formatting, migration replay, and the PostgreSQL append-only contract
+- CI covers frontend IPC error tests/typechecking/build, documentation and authority checks, Rust tests/formatting, migration replay, and the PostgreSQL append-only contract
 
 ### Critical Constraints
 
@@ -40,8 +40,8 @@
 1. Expand the service layer beyond its centralized role-authority checks
 2. Implement the dedicated lifecycle state-machine layer
 3. Connect the existing router and management views to the active frontend entrypoint
-4. Add frontend handling for the structured IPC error envelope
-5. Add command-level tests for serialized Tauri failure responses
+4. Add command-level tests for serialized Tauri failure responses
+5. Replace prompt/alert management actions with governed forms
 
 ### Dev Quickref
 

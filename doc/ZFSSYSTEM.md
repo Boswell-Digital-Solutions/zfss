@@ -170,8 +170,11 @@ zfss/
 │   ├── index.html                   # HTML entry point
 │   ├── main.ts                      # Signal capture UI + initialization
 │   ├── styles.css                   # Global styles
+│   ├── views/                       # Routed management view modules
 │   └── lib/
 │       ├── api.ts                   # Tauri IPC wrappers (25+ functions)
+│       ├── ipc-error.ts             # Fail-closed frontend IPC error parser
+│       ├── ipc-error.test.ts        # Error boundary contract tests
 │       ├── router.ts                # Hash-based SPA router
 │       └── types.ts                 # Type definitions for all models
 │
@@ -249,12 +252,12 @@ zfss/
 
 | Category | Count |
 |----------|-------|
-| TypeScript source files | 6 |
+| TypeScript source files | 12 |
 | Rust source files | 25 |
 | IPC command modules | 5 |
 | Database tables | 11 |
 | Database views | 7 |
-| Migrations | 3 |
+| Migrations | 4 |
 | Operational scripts | 7 |
 
 ---
@@ -332,6 +335,12 @@ TypeScript type definitions mirroring Rust models:
 - Status enums: `SignalStatus`, `IssueStatus`, `ApprovalState`
 - Model interfaces: `Signal`, `Issue`, `Decision`, `Artifact`, `Response`
 - Role enum: `UserRole`
+
+### IPC Error Boundary (lib/ipc-error.ts)
+
+All command failures pass through one frontend parser before display. It accepts only the seven documented `ZFSS_*` codes with a non-empty message, formats valid envelopes with their support code, and maps strings, ordinary `Error` objects, unknown codes, empty messages, arrays, and null values to a generic `ZFSS_INTERNAL` failure without rendering their contents.
+
+Node contract tests cover all admitted codes, user-facing formatting, and fail-closed handling of malformed or credential-bearing values. CI runs these tests and a strict application typecheck before the production build.
 
 ### Styling
 
@@ -421,6 +430,8 @@ Commands return `Result<T, IpcError>`. Tauri serializes failures as an object wi
 ```
 
 Validation failures use `ZFSS_VALIDATION`, denied role actions use `ZFSS_FORBIDDEN`, unavailable or invalid user-role state uses `ZFSS_IDENTITY_UNAVAILABLE`, missing entities use `ZFSS_NOT_FOUND`, invalid lifecycle conditions use `ZFSS_CONFLICT`, and repository failures use `ZFSS_REPOSITORY_UNAVAILABLE` or `ZFSS_INTERNAL` as appropriate. Repository messages are centrally redacted, so raw SQLx messages, connection strings, hosts, credentials, and internal context chains are never returned to the frontend.
+
+The frontend admits only this documented envelope and code set. Malformed rejection values fail closed to `An unexpected application error occurred. (ZFSS_INTERNAL)`; their original contents are not displayed.
 
 ### Global Hotkey
 
@@ -869,7 +880,7 @@ The `db/pool.rs` module creates a `PgPool` with:
 - Frontend view modules exist, but the active entrypoint still exposes only signal capture
 - The dedicated lifecycle module remains a placeholder; transition logic currently lives outside that layer
 - Rust coverage includes typed IDs, fail-closed IPC input validation, redacted repository-error translation, model transitions, role capabilities, IPC authority decisions, fail-closed role resolution, and a PostgreSQL-backed end-to-end repository lifecycle; SQL contracts cover append-only projections
-- CI covers frontend build, documentation and authority checks, Rust tests/formatting, migration replay, and the PostgreSQL append-only contract
+- CI covers frontend IPC error tests/typechecking/build, documentation and authority checks, Rust tests/formatting, migration replay, and the PostgreSQL append-only contract
 
 ### Critical Constraints
 
@@ -883,8 +894,8 @@ The `db/pool.rs` module creates a `PgPool` with:
 1. Expand the service layer beyond its centralized role-authority checks
 2. Implement the dedicated lifecycle state-machine layer
 3. Connect the existing router and management views to the active frontend entrypoint
-4. Add frontend handling for the structured IPC error envelope
-5. Add command-level tests for serialized Tauri failure responses
+4. Add command-level tests for serialized Tauri failure responses
+5. Replace prompt/alert management actions with governed forms
 
 ### Dev Quickref
 

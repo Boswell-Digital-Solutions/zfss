@@ -6,6 +6,7 @@
 
 import { el, setContent, router } from "../lib/router";
 import * as api from "../lib/api";
+import { formatIpcError } from "../lib/ipc-error";
 import type { IssueStatus } from "../lib/types";
 
 export async function render(container: HTMLElement, params: Record<string, string>): Promise<void> {
@@ -39,12 +40,11 @@ export async function render(container: HTMLElement, params: Record<string, stri
     // Add event listeners
     setupEventListeners();
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
     setContent(
       container,
       el("div", { className: "error-state" }, [
         el("h3", {}, ["Error loading issues"]),
-        el("p", {}, [errorMessage]),
+        el("p", {}, [formatIpcError(error)]),
       ])
     );
   }
@@ -109,7 +109,7 @@ async function createIssue(): Promise<void> {
     );
     router.navigate(`/issues/${issue.id}`);
   } catch (error) {
-    alert(`Error creating issue: ${error}`);
+    alert(`Error creating issue: ${formatIpcError(error)}`);
   }
 }
 

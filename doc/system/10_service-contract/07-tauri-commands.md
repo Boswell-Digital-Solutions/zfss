@@ -81,6 +81,8 @@ Commands return `Result<T, IpcError>`. Tauri serializes failures as an object wi
 
 Validation failures use `ZFSS_VALIDATION`, denied role actions use `ZFSS_FORBIDDEN`, unavailable or invalid user-role state uses `ZFSS_IDENTITY_UNAVAILABLE`, missing entities use `ZFSS_NOT_FOUND`, invalid lifecycle conditions use `ZFSS_CONFLICT`, and repository failures use `ZFSS_REPOSITORY_UNAVAILABLE` or `ZFSS_INTERNAL` as appropriate. Repository messages are centrally redacted, so raw SQLx messages, connection strings, hosts, credentials, and internal context chains are never returned to the frontend.
 
+The frontend admits only this documented envelope and code set. Malformed rejection values fail closed to `An unexpected application error occurred. (ZFSS_INTERNAL)`; their original contents are not displayed.
+
 ### Global Hotkey
 
 **Ctrl+Alt+Z** — toggles signal capture window visibility. Implemented via `tauri-plugin-global-shortcut` with 100ms debounce to prevent rapid re-triggering.

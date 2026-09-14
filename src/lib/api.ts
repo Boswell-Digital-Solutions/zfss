@@ -18,7 +18,6 @@ import type {
   DecisionType,
   ArtifactType,
   ResponseChannel,
-  ApprovalState,
 } from "./types";
 
 // =============================================================================

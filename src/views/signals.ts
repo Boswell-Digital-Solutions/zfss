@@ -4,8 +4,9 @@
  * Display and filter signals.
  */
 
-import { el, setContent, router } from "../lib/router";
+import { el, setContent } from "../lib/router";
 import * as api from "../lib/api";
+import { formatIpcError } from "../lib/ipc-error";
 import type { Signal, SignalStatus } from "../lib/types";
 
 export async function render(container: HTMLElement, params: Record<string, string>): Promise<void> {
@@ -36,12 +37,11 @@ export async function render(container: HTMLElement, params: Record<string, stri
 
     setContent(container, view);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
     setContent(
       container,
       el("div", { className: "error-state" }, [
         el("h3", {}, ["Error loading signals"]),
-        el("p", {}, [errorMessage]),
+        el("p", {}, [formatIpcError(error)]),
       ])
     );
   }

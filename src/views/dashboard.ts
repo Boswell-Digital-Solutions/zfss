@@ -6,6 +6,8 @@
 
 import { el, setContent } from "../lib/router";
 import * as api from "../lib/api";
+import { formatIpcError } from "../lib/ipc-error";
+import type { Signal } from "../lib/types";
 
 export async function render(container: HTMLElement): Promise<void> {
   // Show loading state
@@ -62,12 +64,11 @@ export async function render(container: HTMLElement): Promise<void> {
 
     setContent(container, view);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
     setContent(
       container,
       el("div", { className: "error-state" }, [
         el("h3", {}, ["Error loading dashboard"]),
-        el("p", {}, [errorMessage]),
+        el("p", {}, [formatIpcError(error)]),
         el("button", { className: "btn-primary" }, ["Retry"]),
       ])
     );
@@ -87,7 +88,7 @@ function createStatCard(
   return card;
 }
 
-function createSignalCard(signal: api.CaptureResult & { id: string; source: string; raw_text: string; status: string; created_at: string }): HTMLElement {
+function createSignalCard(signal: Signal): HTMLElement {
   const truncatedText = signal.raw_text.length > 100
     ? signal.raw_text.slice(0, 100) + "..."
     : signal.raw_text;
