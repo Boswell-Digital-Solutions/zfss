@@ -212,9 +212,10 @@ zfss/
 │           └── paths.rs             # App data directory helpers
 │
 ├── migrations/                      # PostgreSQL DDL
-│   ├── 001_initial_schema.sql       # 11 tables + 7 views
+│   ├── 001_initial_schema.sql       # Base tables, views, indexes
 │   ├── 002_append_only_enforcement.sql  # Mutation triggers
-│   └── 003_signal_link_events.sql   # Signal linking history
+│   ├── 003_signal_link_events.sql   # Signal linking history
+│   └── 004_append_only_lifecycle_projections.sql # Lifecycle projections
 │
 ├── scripts/                         # Operational tooling
 │   ├── apply_schema.sh              # Apply migrations
@@ -492,7 +493,7 @@ Enforces append-only semantics at the code level:
 - `append_decision()` — INSERT only (can supersede previous)
 - `append_artifact()` — INSERT only
 - `append_response()` — INSERT only
-- Status transitions use INSERT to history table + UPDATE to current status field
+- Lifecycle transitions use INSERT-only history/event tables and current-state projections
 
 **No `update_*()` or `delete_*()` functions exist.** This is a design invariant, not an oversight.
 
@@ -519,29 +520,31 @@ Business logic enforcement:
 
 PostgreSQL 14+ (local ZFSS operational store). Connected via sqlx async driver with connection pooling. It is not canonical ecosystem memory or admitted BDS evidence.
 
-### Tables (11)
+### Tables (13)
 
 | Table | Purpose | Append-Only |
 |-------|---------|-------------|
 | `users` | Role assignments (Steward, Operator, Engineer, AI) | No (mutable) |
 | `signals` | Raw immutable user expressions | Yes |
 | `signal_status_history` | Signal state transition log | Yes |
+| `signal_links` | Signal-to-Issue link events | Yes |
 | `attachments` | Files attached to Signals | Yes |
 | `issues` | System's grouped understanding | Yes |
 | `issue_status_history` | Issue state transition log | Yes |
 | `decisions` | Declared intent (can supersede) | Yes |
 | `artifacts` | Proof of learning | Yes |
+| `artifact_verifications` | Artifact verification events | Yes |
 | `responses` | Controlled outbound communications | Yes |
 | `response_approval_history` | Response approval state log | Yes |
 | `audit_log` | System-wide audit trail | Yes |
 
-### Views (7)
+### Views (3)
 
 Database views provide common query patterns (signal counts by status, issues pending decision, etc.).
 
 ### Append-Only Enforcement
 
-Migration `002_append_only_enforcement.sql` creates a `zfss_forbid_mutation()` trigger function that blocks UPDATE and DELETE on canonical tables:
+Migration `002_append_only_enforcement.sql` creates a `zfss_forbid_mutation()` trigger function. Migration `004_append_only_lifecycle_projections.sql` extends its UPDATE/DELETE guards to every history and event table. Only `users` is mutable.
 
 ```sql
 -- Applied to: signals, issues, decisions, artifacts, responses
@@ -551,15 +554,16 @@ CREATE TRIGGER forbid_mutation
   EXECUTE FUNCTION zfss_forbid_mutation();
 ```
 
-**Exception:** The single `status` field on canonical tables allows UPDATE for state transitions. Status changes are also logged to the corresponding `*_status_history` table via INSERT.
+There is no mutation exception. Lifecycle changes are INSERTs into history/event tables; reads project the latest state while canonical rows retain their creation-time values.
 
 ### Migrations
 
 | File | Description |
 |------|-------------|
-| `001_initial_schema.sql` | 11 tables + 7 views + indexes |
+| `001_initial_schema.sql` | Base tables, views, and indexes |
 | `002_append_only_enforcement.sql` | Mutation-blocking triggers |
 | `003_signal_link_events.sql` | Signal linking history tracking |
+| `004_append_only_lifecycle_projections.sql` | Lifecycle event tables and current-state views |
 
 ### ID Generation
 
@@ -837,7 +841,7 @@ The `db/pool.rs` module creates a `PgPool` with:
 
 - Tauri v2 project builds and launches
 - PostgreSQL connection with sqlx
-- Schema with 11 tables + 7 views + append-only triggers
+- Schema with 13 tables + 3 views + append-only triggers
 - Signal capture via IPC (capture_signal command)
 - Global hotkey Ctrl+Alt+Z toggles capture window
 - Frontend signal capture UI
@@ -848,7 +852,7 @@ The `db/pool.rs` module creates a `PgPool` with:
 - Repository operations and centralized role authorization are implemented; broader service-layer business logic remains pending
 - Frontend view modules exist, but the active entrypoint still exposes only signal capture
 - The dedicated lifecycle module remains a placeholder; transition logic currently lives outside that layer
-- Rust coverage includes typed IDs, fail-closed model transitions, role capabilities, IPC authority decisions, and fail-closed role resolution; database-backed lifecycle behavior lacks direct tests
+- Rust coverage includes typed IDs, fail-closed model transitions, role capabilities, IPC authority decisions, and fail-closed role resolution; PostgreSQL contracts cover append-only lifecycle projections
 - CI covers frontend build, documentation and authority checks, Rust tests/formatting, migration replay, and the PostgreSQL append-only contract
 
 ### Critical Constraints
@@ -863,7 +867,7 @@ The `db/pool.rs` module creates a `PgPool` with:
 1. Expand the service layer beyond its centralized role-authority checks
 2. Implement the dedicated lifecycle state-machine layer
 3. Connect the existing router and management views to the active frontend entrypoint
-4. Add direct tests for IPC input validation and database-backed lifecycle transitions
+4. Add direct tests for IPC input validation
 5. Add repository integration cases beyond the append-only database contract
 
 ### Dev Quickref

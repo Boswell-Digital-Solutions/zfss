@@ -1,6 +1,6 @@
 -- ZFSS Initial Schema - PostgreSQL
 -- NON-NEGOTIABLE: No UPDATE or DELETE on canonical records
--- Status changes use INSERT to history + UPDATE to current status field only
+-- Lifecycle changes use INSERT-only history/event tables; canonical rows stay immutable
 
 -- Enable UUID extension
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";

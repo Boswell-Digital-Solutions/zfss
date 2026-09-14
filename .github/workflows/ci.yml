@@ -41,6 +41,17 @@ jobs:
             echo 'Superseded authority language found in a canonical surface' >&2
             exit 1
           fi
+      - name: Reject canonical repository mutations
+        run: |
+          python3 - <<'PY'
+          import pathlib
+          import re
+
+          source = pathlib.Path("src-tauri/src/repository/mod.rs").read_text(encoding="utf-8")
+          mutation = re.search(r"\b(?:UPDATE|DELETE\s+FROM)\s+(?:issues|signals|decisions|artifacts|responses)\b", source, re.IGNORECASE)
+          if mutation:
+              raise SystemExit(f"canonical mutation statement found: {mutation.group(0)}")
+          PY
 
   rust:
     runs-on: ubuntu-latest
