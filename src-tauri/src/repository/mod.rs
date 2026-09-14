@@ -5,14 +5,14 @@
 
 use crate::models::ids::{ArtifactId, DecisionId, IssueId, ResponseId, SignalId};
 use crate::models::{
-    Artifact, ArtifactCreate, ArtifactSummary, ApprovalState, Decision, DecisionCreate,
+    ApprovalState, Artifact, ArtifactCreate, ArtifactSummary, Decision, DecisionCreate,
     DecisionHistoryEntry, Issue, IssueCreate, IssueStatus, IssueSummary, Response, ResponseCreate,
     ResponseSummary, Signal, SignalCreate, SignalStatus,
 };
-use anyhow::{anyhow, Context, Result};
+use anyhow::{Context, Result, anyhow};
 use chrono::{DateTime, Utc};
-use serde::de::DeserializeOwned;
 use serde::Serialize;
+use serde::de::DeserializeOwned;
 use serde_json::Value;
 use sqlx::PgPool;
 
@@ -349,9 +349,12 @@ pub async fn append_issue(pool: &PgPool, input: IssueCreate, created_by: &str) -
         .await
         .context("commit issue insert transaction")?;
 
-    get_issue(pool, issue_id.as_str())
-        .await?
-        .ok_or_else(|| anyhow!("issue {} was inserted but could not be loaded", issue_id.as_str()))
+    get_issue(pool, issue_id.as_str()).await?.ok_or_else(|| {
+        anyhow!(
+            "issue {} was inserted but could not be loaded",
+            issue_id.as_str()
+        )
+    })
 }
 
 /// List issues, optionally filtered by status, ordered newest first.
@@ -632,7 +635,12 @@ pub async fn append_decision(
 
     get_decision(pool, decision_id.as_str())
         .await?
-        .ok_or_else(|| anyhow!("decision {} was inserted but could not be loaded", decision_id.as_str()))
+        .ok_or_else(|| {
+            anyhow!(
+                "decision {} was inserted but could not be loaded",
+                decision_id.as_str()
+            )
+        })
 }
 
 /// Fetch a single decision by ID.
@@ -774,7 +782,12 @@ pub async fn append_artifact(
 
     get_artifact(pool, artifact_id.as_str())
         .await?
-        .ok_or_else(|| anyhow!("artifact {} was inserted but could not be loaded", artifact_id.as_str()))
+        .ok_or_else(|| {
+            anyhow!(
+                "artifact {} was inserted but could not be loaded",
+                artifact_id.as_str()
+            )
+        })
 }
 
 /// Fetch a single artifact by ID.
@@ -792,7 +805,10 @@ pub async fn get_artifact(pool: &PgPool, artifact_id: &str) -> Result<Option<Art
 }
 
 /// List artifacts for an issue.
-pub async fn list_artifacts_for_issue(pool: &PgPool, issue_id: &str) -> Result<Vec<ArtifactSummary>> {
+pub async fn list_artifacts_for_issue(
+    pool: &PgPool,
+    issue_id: &str,
+) -> Result<Vec<ArtifactSummary>> {
     let rows = sqlx::query_as::<_, ArtifactSummaryRow>(
         r#"SELECT id, artifact_type, title, verified, created_at
         FROM artifacts WHERE issue_id = $1
@@ -956,7 +972,12 @@ pub async fn append_response(
 
     get_response(pool, response_id.as_str())
         .await?
-        .ok_or_else(|| anyhow!("response {} was inserted but could not be loaded", response_id.as_str()))
+        .ok_or_else(|| {
+            anyhow!(
+                "response {} was inserted but could not be loaded",
+                response_id.as_str()
+            )
+        })
 }
 
 /// Fetch a single response by ID.
@@ -979,7 +1000,10 @@ pub async fn get_response(pool: &PgPool, response_id: &str) -> Result<Option<Res
 }
 
 /// List responses for a signal.
-pub async fn list_responses_for_signal(pool: &PgPool, signal_id: &str) -> Result<Vec<ResponseSummary>> {
+pub async fn list_responses_for_signal(
+    pool: &PgPool,
+    signal_id: &str,
+) -> Result<Vec<ResponseSummary>> {
     let rows = sqlx::query_as::<_, ResponseSummaryRow>(
         r#"
         SELECT

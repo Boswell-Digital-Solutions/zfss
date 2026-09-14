@@ -83,7 +83,10 @@ pub async fn list_issues(
 
 /// Get a single issue by ID
 #[tauri::command]
-pub async fn get_issue(id: String, state: State<'_, Arc<AppState>>) -> Result<Option<Issue>, String> {
+pub async fn get_issue(
+    id: String,
+    state: State<'_, Arc<AppState>>,
+) -> Result<Option<Issue>, String> {
     repository::get_issue(&state.pool, &id)
         .await
         .map_err(|e| format!("Failed to get issue: {}", e))
