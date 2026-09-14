@@ -2,7 +2,7 @@
 
 ### Identity
 
-**ZFSS** (Zen Feedback & Service System) is a Tauri v2 desktop application that captures, triages, and responds to user feedback with append-only PostgreSQL as the authoritative data store.
+**ZFSS** (Zen Feedback & Service System) is a Tauri v2 desktop application that captures, triages, and responds to user feedback with append-only PostgreSQL as the operational source for the ZFSS feedback domain.
 
 - **Purpose:** Feedback metabolism — turning raw user signals into verified learning artifacts
 - **Paradigm:** Append-only, lifecycle-governed, role-based authority
@@ -11,12 +11,15 @@
 
 ### Design Commitments
 
-1. **DataForgeDB (local PostgreSQL) is authoritative** — single source of truth, no cloud authority
+1. **ZFSS PostgreSQL owns ZFSS operational records** — it is not DataForge, canonical ecosystem memory, or admitted BDS evidence
 2. **Append-only semantics** — no UPDATE/DELETE on canonical records, enforced at database level via triggers
-3. **Cloud services are stateless consumers** — can only read or submit new Signals
+3. **Cross-system promotion is governed** — Forge Memory derives candidates; Forge_Command records operator authorization; SMITH applies exact approved actions; Cloud DataForge retains admitted records and receipts
 4. **SQLite is optional** — only as write-behind buffer for offline Signal capture
 5. **Lifecycle enforced in code** — no Issue may close without verified Artifact
 6. **Role-based authority** — Steward decides, Operator executes, Engineer builds, AI suggests
+7. **Promotion is disabled by default** — no ZFSS → Forge Memory route or external mutation is admitted here
+
+The machine-readable boundary is `contracts/authority/zfss-authority.v1.yaml`.
 
 ### Canonical Objects
 

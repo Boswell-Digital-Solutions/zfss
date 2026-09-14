@@ -1,11 +1,13 @@
 # Render-to-Local Cutover (No Data)
 
-Purpose: document the operational steps for cutting the ZFSS stack from a stateless Render Postgres to the local Postgres authority **when no production data needs migrating** (schema-only). This is a minimal cutover focused on bringing up the local database, enforcing append-only guards, redirecting configs, and producing simple proof of authority.
+> **Historical runbook:** This document predates `contracts/authority/zfss-authority.v1.yaml`; it authorizes no present cutover, credential change, or runtime reconnection.
+
+Purpose: document the historical schema-only cutover from Render Postgres to the local ZFSS operational store when no production data needed migration.
 
 ## 1. Assumptions
 
 - Render Postgres never saw production traffic; the migration is schema-only.
-- Local Postgres will be the first and only authoritative store for canonical objects.
+- Local Postgres will hold ZFSS feedback-domain operational objects. It does not own canonical ecosystem memory or admitted BDS evidence.
 - Append-only/insertion guards are defined via `zfss/migrations/002_append_only_enforcement.sql` and described in `zfss/docs/local_postgres_authority.md`.
 
 ## 2. Local Postgres bring-up

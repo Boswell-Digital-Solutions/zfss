@@ -3,7 +3,7 @@
 **Version:** 1.0.0
 **Status:** Phase 1 Complete
 
-Feedback metabolism for the Forge ecosystem. A Tauri v2 desktop application with local PostgreSQL as the authoritative data store.
+Feedback metabolism for the Forge ecosystem. A Tauri v2 desktop application with local PostgreSQL as the authoritative operational source for the ZFSS feedback domain.
 
 ## Documentation Contract
 
@@ -15,12 +15,15 @@ Feedback metabolism for the Forge ecosystem. A Tauri v2 desktop application with
 
 ## Non-Negotiable Architecture Rules
 
-1. **DataForgeDB (local PostgreSQL) is authoritative** - Single source of truth
+1. **ZFSS PostgreSQL owns ZFSS operational records** - It is not DataForge and does not own canonical ecosystem memory or admitted BDS evidence
 2. **Append-only semantics** - No UPDATE/DELETE on canonical records
-3. **Cloud services are stateless consumers** - Can only read or submit new Signals
+3. **Cross-system promotion is governed** - Forge Memory may derive candidates; Forge_Command records operator authorization; SMITH applies the exact approved action; Cloud DataForge retains admitted records and receipts
 4. **SQLite is optional** - Only as write-behind buffer for offline Signal capture
 5. **Lifecycle enforced in code** - No Issue may close without verified Artifact
 6. **Role-based authority** - Steward decides, Operator executes, Engineer builds, AI suggests
+7. **Promotion is disabled by default** - No ZFSS → Forge Memory producer route, shared-memory promotion, or external mutation is admitted by this repository
+
+See `contracts/authority/zfss-authority.v1.yaml` for the machine-readable authority boundary.
 
 ## Canonical Objects
 

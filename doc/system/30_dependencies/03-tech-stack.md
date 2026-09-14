@@ -7,7 +7,7 @@
 | Rust | 2024 edition | Backend language |
 | TypeScript | 5.x | Frontend language |
 | Node.js | 18+ | Build tooling |
-| PostgreSQL | 14+ | Authoritative data store |
+| PostgreSQL | 14+ | ZFSS operational feedback store |
 
 ### Framework
 

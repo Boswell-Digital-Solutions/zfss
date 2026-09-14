@@ -1,6 +1,8 @@
 # Authority Cutover (Prompt 7)
 
-Purpose: finalize the transition so the local Postgres instance is the *only* writable DataForgeDB, all Render credentials are invalidated, and cloud services are limited to appending Signals.
+> **Superseded authority language:** This historical cutover record predates `contracts/authority/zfss-authority.v1.yaml`. It does not establish DataForge authority and authorizes no present credential, migration, or runtime action.
+
+Historical purpose: transition ZFSS writes from Render to its local operational PostgreSQL store and limit legacy remote clients to appending Signals.
 
 ## 1. Disable Render writes
 
@@ -8,7 +10,7 @@ Purpose: finalize the transition so the local Postgres instance is the *only* wr
 2. Remove the Render env var that provided `DATABASE_URL` to the `dataforge` service so the Render deployment cannot open new connections. (In practice this means pruning the entry under `envVars` → `DATABASE_URL` in `render-dataforge-only.yaml` and redeploying with the empty/missing key.)
 3. Optional: Pause the Render `dataforge` service until you confirm local Postgres and clients are receiving traffic so no race occurs.
 
-## 2. Point applications to the new local authority
+## 2. Historical application connection change
 
 - Update every `.env`, Docker/Compose, and deployment configuration that previously relied on Render’s `DATABASE_URL` to instead reference the append-only role defined in `zfss/docs/local_postgres_authority.md`:
 

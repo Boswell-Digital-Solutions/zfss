@@ -1,6 +1,8 @@
 # Local Re-ingest Plan (Prompt 5)
 
-Purpose: replay the Render-exported ledger CSVs into the new, authoritative local PostgreSQL instance while keeping timestamps, foreign keys, and immutability intact.
+> **Historical migration plan:** This document predates `contracts/authority/zfss-authority.v1.yaml`; it authorizes no present migration and grants no DataForge authority.
+
+Purpose: replay the Render-exported ZFSS ledger CSVs into the local ZFSS operational PostgreSQL instance while keeping timestamps, foreign keys, and immutability intact.
 
 ## 1. Preconditions
 
@@ -49,4 +51,4 @@ Compare against equivalent queries executed against Render (from Prompt 4) to 
 
 For offline execution guidance (when PyPI is unreachable) see `zfss/docs/ops/verify_migration_offline.md`.
 
-Finally, archive the snapshot CSVs (e.g., `tar -czf dataforge_render_snapshot.tar.gz -C zfss_render_snapshot .`) for auditing what data was replayed. Keep the archive read-only to serve as the canonical ledger history.
+Finally, archive the snapshot CSVs (e.g., `tar -czf dataforge_render_snapshot.tar.gz -C zfss_render_snapshot .`) for auditing what data was replayed. Keep the archive read-only as historical migration evidence; retention does not promote it to canonical ecosystem memory or admitted BDS evidence.
