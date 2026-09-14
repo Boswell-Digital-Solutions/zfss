@@ -80,9 +80,8 @@ pub async fn list_signals(
 
     let status_filter = if let Some(status_value) = status {
         Some(
-            SignalStatus::from_str(&status_value).ok_or_else(|| {
-                validation_error(format!("Invalid status: '{}'", status_value))
-            })?,
+            SignalStatus::from_str(&status_value)
+                .ok_or_else(|| validation_error(format!("Invalid status: '{}'", status_value)))?,
         )
     } else {
         None

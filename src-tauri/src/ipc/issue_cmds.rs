@@ -68,9 +68,8 @@ pub async fn list_issues(
 
     let status_filter = if let Some(status_value) = status {
         Some(
-            IssueStatus::from_str(&status_value).ok_or_else(|| {
-                validation_error(format!("Invalid status: '{}'", status_value))
-            })?,
+            IssueStatus::from_str(&status_value)
+                .ok_or_else(|| validation_error(format!("Invalid status: '{}'", status_value)))?,
         )
     } else {
         None
