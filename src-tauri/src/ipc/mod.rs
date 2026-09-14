@@ -75,8 +75,8 @@ mod command_error_contract_tests {
         .expect_err("command must reject the test request")
     }
 
-    #[test]
-    fn validation_failure_crosses_the_tauri_command_boundary_as_an_envelope() {
+    #[tokio::test]
+    async fn validation_failure_crosses_the_tauri_command_boundary_as_an_envelope() {
         let app = test_app("Steward");
         let webview = WebviewWindowBuilder::new(&app, "validation", Default::default())
             .build()
@@ -95,8 +95,8 @@ mod command_error_contract_tests {
         );
     }
 
-    #[test]
-    fn authority_failure_crosses_the_tauri_command_boundary_as_an_envelope() {
+    #[tokio::test]
+    async fn authority_failure_crosses_the_tauri_command_boundary_as_an_envelope() {
         let app = test_app("Engineer");
         let webview = WebviewWindowBuilder::new(&app, "authority", Default::default())
             .build()
