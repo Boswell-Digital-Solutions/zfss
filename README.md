@@ -75,7 +75,7 @@ npm run tauri dev
 ```bash
 npm ci
 npm run build
-cargo test --manifest-path src-tauri/Cargo.toml --locked
+cargo test --manifest-path src-tauri/Cargo.toml
 bash doc/system/BUILD.sh
 ```
 
