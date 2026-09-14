@@ -27,6 +27,15 @@ require_absent() {
   fi
 }
 
+require_path_absent() {
+  local path="$1"
+  local label="$2"
+  if test -e "$path"; then
+    echo "snapshot validation failed: $label still exists at $path" >&2
+    exit 1
+  fi
+}
+
 # Canonical identity: the index must declare the designation-bound output.
 require_contains "$PARTS_DIR/_index.md" "**Designation:** ZFS" "index designation"
 require_contains "$PARTS_DIR/_index.md" "BDS Documentation Protocol v2.0" "index protocol"
@@ -34,6 +43,9 @@ require_contains "$PARTS_DIR/_index.md" 'Primary output: `doc/ZFSSYSTEM.md`' "in
 require_contains "$PARTS_DIR/BUILD.sh" 'DESIGNATION="ZFS"' "build designation"
 require_absent  "$PARTS_DIR/_index.md" 'Primary output: `doc/SYSTEM.md`' "index legacy primary output"
 require_absent  "$PARTS_DIR/_index.md" 'Command: `bash doc/SYSTEM.md`' "index legacy doc/SYSTEM.md command"
+require_path_absent "$ROOT_DIR/SYSTEM.md" "legacy root snapshot"
+require_path_absent "$ROOT_DIR/doc/SYSTEM.md" "legacy generic doc snapshot"
+require_path_absent "$ROOT_DIR/doc/zsSYSTEM.md" "legacy designation snapshot"
 
 # Assembled artifact must carry doctrine and not still declare legacy output.
 test -f "$ASSEMBLED_OUTPUT"
