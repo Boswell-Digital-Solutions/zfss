@@ -14,7 +14,7 @@
 
 - Tauri v2 project builds and launches
 - PostgreSQL connection with sqlx
-- Schema with 11 tables + 7 views + append-only triggers
+- Schema with 13 tables + 3 views + append-only triggers
 - Signal capture via IPC (capture_signal command)
 - Global hotkey Ctrl+Alt+Z toggles capture window
 - Frontend signal capture UI
@@ -25,7 +25,7 @@
 - Repository operations and centralized role authorization are implemented; broader service-layer business logic remains pending
 - Frontend view modules exist, but the active entrypoint still exposes only signal capture
 - The dedicated lifecycle module remains a placeholder; transition logic currently lives outside that layer
-- Rust coverage includes typed IDs, fail-closed model transitions, role capabilities, IPC authority decisions, and fail-closed role resolution; database-backed lifecycle behavior lacks direct tests
+- Rust coverage includes typed IDs, fail-closed model transitions, role capabilities, IPC authority decisions, and fail-closed role resolution; PostgreSQL contracts cover append-only lifecycle projections
 - CI covers frontend build, documentation and authority checks, Rust tests/formatting, migration replay, and the PostgreSQL append-only contract
 
 ### Critical Constraints
@@ -40,7 +40,7 @@
 1. Expand the service layer beyond its centralized role-authority checks
 2. Implement the dedicated lifecycle state-machine layer
 3. Connect the existing router and management views to the active frontend entrypoint
-4. Add direct tests for IPC input validation and database-backed lifecycle transitions
+4. Add direct tests for IPC input validation
 5. Add repository integration cases beyond the append-only database contract
 
 ### Dev Quickref

@@ -48,9 +48,10 @@ zfss/
 │           └── paths.rs             # App data directory helpers
 │
 ├── migrations/                      # PostgreSQL DDL
-│   ├── 001_initial_schema.sql       # 11 tables + 7 views
+│   ├── 001_initial_schema.sql       # Base tables, views, indexes
 │   ├── 002_append_only_enforcement.sql  # Mutation triggers
-│   └── 003_signal_link_events.sql   # Signal linking history
+│   ├── 003_signal_link_events.sql   # Signal linking history
+│   └── 004_append_only_lifecycle_projections.sql # Lifecycle projections
 │
 ├── scripts/                         # Operational tooling
 │   ├── apply_schema.sh              # Apply migrations

@@ -374,7 +374,7 @@ pub async fn list_issues(
             i.classification,
             i.severity,
             COALESCE(latest_status.new_status, i.status) AS status,
-            COUNT(s.id) AS signal_count,
+            COUNT(latest_link.signal_id) AS signal_count,
             i.created_at
         FROM issues i
         LEFT JOIN LATERAL (
@@ -384,7 +384,12 @@ pub async fn list_issues(
             ORDER BY h.changed_at DESC, h.id DESC
             LIMIT 1
         ) AS latest_status ON TRUE
-        LEFT JOIN signals s ON s.linked_issue_id = i.id
+        LEFT JOIN LATERAL (
+            SELECT DISTINCT ON (l.signal_id) l.signal_id
+            FROM signal_links l
+            WHERE l.issue_id = i.id
+            ORDER BY l.signal_id, l.linked_at DESC, l.id DESC
+        ) AS latest_link ON TRUE
         WHERE ($1::text IS NULL OR COALESCE(latest_status.new_status, i.status) = $1)
         GROUP BY i.id, i.title, i.classification, i.severity, i.status, i.created_at, latest_status.new_status
         ORDER BY i.created_at DESC
@@ -434,7 +439,7 @@ pub async fn get_issue(pool: &PgPool, issue_id: &str) -> Result<Option<Issue>> {
     Ok(row.map(|r| r.into_issue()))
 }
 
-/// Transition an issue's status (append-only: inserts into history, updates current).
+/// Transition an issue's status by appending to its history.
 pub async fn transition_issue_status(
     pool: &PgPool,
     issue_id: &str,
@@ -485,14 +490,6 @@ pub async fn transition_issue_status(
     .execute(&mut *tx)
     .await
     .context("failed to insert issue status history")?;
-
-    // Update the denormalized status column
-    sqlx::query("UPDATE issues SET status = $1 WHERE id = $2")
-        .bind(new_status.as_str())
-        .bind(issue_id)
-        .execute(&mut *tx)
-        .await
-        .context("failed to update issue status")?;
 
     tx.commit()
         .await
@@ -620,12 +617,6 @@ pub async fn append_decision(
             .execute(&mut *tx)
             .await
             .context("failed to insert issue status history for decision")?;
-
-            sqlx::query("UPDATE issues SET status = 'decided' WHERE id = $1")
-                .bind(&input.issue_id)
-                .execute(&mut *tx)
-                .await
-                .context("failed to update issue status to decided")?;
         }
     }
 
@@ -793,8 +784,11 @@ pub async fn append_artifact(
 /// Fetch a single artifact by ID.
 pub async fn get_artifact(pool: &PgPool, artifact_id: &str) -> Result<Option<Artifact>> {
     let row = sqlx::query_as::<_, ArtifactRow>(
-        r#"SELECT id, issue_id, artifact_type, title, description, ref_url, note, verified, verified_by, verified_at, created_at, created_by
-        FROM artifacts WHERE id = $1"#,
+        r#"SELECT a.id, a.issue_id, a.artifact_type, a.title, a.description, a.ref_url, a.note,
+            (v.id IS NOT NULL) AS verified, v.verified_by, v.verified_at, a.created_at, a.created_by
+        FROM artifacts a
+        LEFT JOIN artifact_verifications v ON v.artifact_id = a.id
+        WHERE a.id = $1"#,
     )
     .bind(artifact_id)
     .fetch_optional(pool)
@@ -810,9 +804,11 @@ pub async fn list_artifacts_for_issue(
     issue_id: &str,
 ) -> Result<Vec<ArtifactSummary>> {
     let rows = sqlx::query_as::<_, ArtifactSummaryRow>(
-        r#"SELECT id, artifact_type, title, verified, created_at
-        FROM artifacts WHERE issue_id = $1
-        ORDER BY created_at DESC"#,
+        r#"SELECT a.id, a.artifact_type, a.title, (v.id IS NOT NULL) AS verified, a.created_at
+        FROM artifacts a
+        LEFT JOIN artifact_verifications v ON v.artifact_id = a.id
+        WHERE a.issue_id = $1
+        ORDER BY a.created_at DESC"#,
     )
     .bind(issue_id)
     .fetch_all(pool)
@@ -825,7 +821,7 @@ pub async fn list_artifacts_for_issue(
 /// Check if an issue has any verified artifacts.
 pub async fn has_verified_artifact(pool: &PgPool, issue_id: &str) -> Result<bool> {
     let exists: bool = sqlx::query_scalar(
-        "SELECT EXISTS(SELECT 1 FROM artifacts WHERE issue_id = $1 AND verified = TRUE)",
+        "SELECT EXISTS(SELECT 1 FROM artifacts a JOIN artifact_verifications v ON v.artifact_id = a.id WHERE a.issue_id = $1)",
     )
     .bind(issue_id)
     .fetch_one(pool)
@@ -835,7 +831,7 @@ pub async fn has_verified_artifact(pool: &PgPool, issue_id: &str) -> Result<bool
     Ok(exists)
 }
 
-/// Verify an artifact (Steward only). This is an UPDATE but only on the verified fields.
+/// Verify an artifact by appending an immutable verification event.
 pub async fn verify_artifact(
     pool: &PgPool,
     artifact_id: &str,
@@ -854,10 +850,10 @@ pub async fn verify_artifact(
     }
 
     sqlx::query(
-        "UPDATE artifacts SET verified = TRUE, verified_by = $1, verified_at = NOW() WHERE id = $2",
+        "INSERT INTO artifact_verifications (artifact_id, verified_by, reason) VALUES ($1, $2, 'Verified by Steward')",
     )
-    .bind(verified_by)
     .bind(artifact_id)
+    .bind(verified_by)
     .execute(&mut *tx)
     .await
     .context("failed to verify artifact")?;
@@ -988,7 +984,11 @@ pub async fn get_response(pool: &PgPool, response_id: &str) -> Result<Option<Res
                 (SELECT new_state FROM response_approval_history WHERE response_id = responses.id ORDER BY changed_at DESC, id DESC LIMIT 1),
                 approval_state
             ) AS approval_state,
-            policy_violations, drafted_by, drafted_at, approved_by, approved_at, sent_at, blocked_reason
+            policy_violations, drafted_by, drafted_at,
+            (SELECT changed_by FROM response_approval_history WHERE response_id = responses.id AND new_state = 'approved' ORDER BY changed_at DESC, id DESC LIMIT 1) AS approved_by,
+            (SELECT changed_at FROM response_approval_history WHERE response_id = responses.id AND new_state = 'approved' ORDER BY changed_at DESC, id DESC LIMIT 1) AS approved_at,
+            (SELECT changed_at FROM response_approval_history WHERE response_id = responses.id AND new_state = 'sent' ORDER BY changed_at DESC, id DESC LIMIT 1) AS sent_at,
+            (SELECT blocked_reason FROM response_approval_history WHERE response_id = responses.id AND new_state = 'blocked' ORDER BY changed_at DESC, id DESC LIMIT 1) AS blocked_reason
         FROM responses WHERE id = $1"#,
     )
     .bind(response_id)
@@ -1070,59 +1070,18 @@ pub async fn transition_response_state(
     }
 
     sqlx::query(
-        "INSERT INTO response_approval_history (response_id, old_state, new_state, changed_by, reason)
-        VALUES ($1, $2, $3, $4, $5)",
+        "INSERT INTO response_approval_history (response_id, old_state, new_state, changed_by, reason, blocked_reason)
+        VALUES ($1, $2, $3, $4, $5, $6)",
     )
     .bind(response_id)
     .bind(current.as_str())
     .bind(new_state.as_str())
     .bind(actor)
     .bind(reason)
+    .bind(blocked_reason)
     .execute(&mut *tx)
     .await
     .context("failed to insert response approval history")?;
-
-    // Update denormalized fields based on state
-    match new_state {
-        ApprovalState::Approved => {
-            sqlx::query(
-                "UPDATE responses SET approval_state = $1, approved_by = $2, approved_at = NOW() WHERE id = $3",
-            )
-            .bind(new_state.as_str())
-            .bind(actor)
-            .bind(response_id)
-            .execute(&mut *tx)
-            .await
-            .context("failed to update response for approval")?;
-        }
-        ApprovalState::Sent => {
-            sqlx::query("UPDATE responses SET approval_state = $1, sent_at = NOW() WHERE id = $2")
-                .bind(new_state.as_str())
-                .bind(response_id)
-                .execute(&mut *tx)
-                .await
-                .context("failed to update response for sent")?;
-        }
-        ApprovalState::Blocked => {
-            sqlx::query(
-                "UPDATE responses SET approval_state = $1, blocked_reason = $2 WHERE id = $3",
-            )
-            .bind(new_state.as_str())
-            .bind(blocked_reason)
-            .bind(response_id)
-            .execute(&mut *tx)
-            .await
-            .context("failed to update response for blocked")?;
-        }
-        _ => {
-            sqlx::query("UPDATE responses SET approval_state = $1 WHERE id = $2")
-                .bind(new_state.as_str())
-                .bind(response_id)
-                .execute(&mut *tx)
-                .await
-                .context("failed to update response state")?;
-        }
-    }
 
     tx.commit()
         .await

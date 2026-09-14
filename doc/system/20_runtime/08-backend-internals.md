@@ -59,7 +59,7 @@ Enforces append-only semantics at the code level:
 - `append_decision()` — INSERT only (can supersede previous)
 - `append_artifact()` — INSERT only
 - `append_response()` — INSERT only
-- Status transitions use INSERT to history table + UPDATE to current status field
+- Lifecycle transitions use INSERT-only history/event tables and current-state projections
 
 **No `update_*()` or `delete_*()` functions exist.** This is a design invariant, not an oversight.
 
