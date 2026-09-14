@@ -3,8 +3,9 @@
 //! Commands for creating, listing, and verifying artifacts.
 //! Engineers create artifacts, Stewards verify them.
 
-use crate::models::{Artifact, ArtifactCreate, ArtifactSummary, ArtifactType, UserRole};
+use crate::models::{Artifact, ArtifactCreate, ArtifactSummary, ArtifactType};
 use crate::repository;
+use crate::service::{AuthorityAction, require_authority};
 use crate::state::AppState;
 use std::sync::Arc;
 use tauri::State;
@@ -21,13 +22,7 @@ pub async fn create_artifact(
     state: State<'_, Arc<AppState>>,
 ) -> Result<Artifact, String> {
     // Enforce Engineer or Steward authority
-    let role = state.current_user_role();
-    if !role.can_create_artifact() {
-        return Err(format!(
-            "Permission denied: only Engineers or Stewards can create artifacts (current role: {:?})",
-            role
-        ));
-    }
+    require_authority(state.current_user_role()?, AuthorityAction::CreateArtifact)?;
 
     // Validate title
     if title.trim().is_empty() {
@@ -99,13 +94,7 @@ pub async fn verify_artifact(
     state: State<'_, Arc<AppState>>,
 ) -> Result<Artifact, String> {
     // Enforce Steward-only authority
-    let role = state.current_user_role();
-    if !role.can_verify_artifact() {
-        return Err(format!(
-            "Permission denied: only Stewards can verify artifacts (current role: {:?})",
-            role
-        ));
-    }
+    require_authority(state.current_user_role()?, AuthorityAction::VerifyArtifact)?;
 
     let verified_by = state.current_user_id();
 

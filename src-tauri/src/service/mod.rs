@@ -2,4 +2,6 @@
 //!
 //! Business logic for all canonical objects.
 
-// Placeholder for future implementation
+pub mod authority;
+
+pub use authority::{AuthorityAction, require_authority};

@@ -4,8 +4,9 @@
 //! Only Stewards can make decisions (enforced here).
 
 use crate::constraints::DEFAULT_STEWARD_DEADLINE_DAYS;
-use crate::models::{Decision, DecisionCreate, DecisionHistoryEntry, DecisionType, UserRole};
+use crate::models::{Decision, DecisionCreate, DecisionHistoryEntry, DecisionType};
 use crate::repository;
+use crate::service::{AuthorityAction, require_authority};
 use crate::state::AppState;
 use std::sync::Arc;
 use tauri::State;
@@ -20,13 +21,7 @@ pub async fn record_decision(
     state: State<'_, Arc<AppState>>,
 ) -> Result<Decision, String> {
     // Enforce Steward-only authority
-    let role = state.current_user_role();
-    if !role.can_make_decision() {
-        return Err(format!(
-            "Permission denied: only Stewards can make decisions (current role: {:?})",
-            role
-        ));
-    }
+    require_authority(state.current_user_role()?, AuthorityAction::MakeDecision)?;
 
     // Validate rationale length
     if rationale.len() < 10 {

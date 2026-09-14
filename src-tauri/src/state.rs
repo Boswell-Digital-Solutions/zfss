@@ -53,13 +53,22 @@ impl AppState {
     }
 
     /// Get the current user role (from settings or authenticated user)
-    pub fn current_user_role(&self) -> UserRole {
-        self.current_user
+    pub fn current_user_role(&self) -> Result<UserRole, String> {
+        let guard = self
+            .current_user
             .lock()
-            .ok()
-            .and_then(|guard| guard.as_ref().map(|u| u.role))
-            .or_else(|| UserRole::from_str(&self.settings.current_user_role))
-            .unwrap_or(UserRole::Steward) // Default to Steward for local dev
+            .map_err(|_| "current user state is unavailable".to_string())?;
+
+        if let Some(user) = guard.as_ref() {
+            return Ok(user.role);
+        }
+
+        UserRole::from_str(&self.settings.current_user_role).ok_or_else(|| {
+            format!(
+                "invalid configured user role: {}",
+                self.settings.current_user_role
+            )
+        })
     }
 
     /// Get monotonic milliseconds since app start
@@ -72,5 +81,42 @@ impl AppState {
         if let Ok(mut guard) = self.current_user.lock() {
             *guard = user;
         }
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use super::AppState;
+    use crate::config::Settings;
+    use crate::models::{CurrentUser, UserRole};
+    use sqlx::postgres::PgPoolOptions;
+    use uuid::Uuid;
+
+    fn state_with_configured_role(role: &str) -> AppState {
+        let pool = PgPoolOptions::new()
+            .connect_lazy("postgresql://localhost/zfss_test")
+            .expect("test database URL must parse");
+        let settings = Settings {
+            current_user_role: role.to_string(),
+            ..Settings::default()
+        };
+        AppState::new(pool, settings, Uuid::nil())
+    }
+
+    #[test]
+    fn invalid_configured_role_fails_closed() {
+        let state = state_with_configured_role("Admin");
+        assert!(state.current_user_role().is_err());
+    }
+
+    #[test]
+    fn authenticated_role_overrides_configured_role() {
+        let state = state_with_configured_role("Steward");
+        state.set_current_user(Some(CurrentUser {
+            id: "user_test".to_string(),
+            display_name: "Test Engineer".to_string(),
+            role: UserRole::Engineer,
+        }));
+        assert_eq!(state.current_user_role(), Ok(UserRole::Engineer));
     }
 }

@@ -5,6 +5,7 @@
 use crate::constraints::MAX_RAW_TEXT_BYTES;
 use crate::models::{Signal, SignalCreate, SignalSource, SignalStatus};
 use crate::repository;
+use crate::service::{AuthorityAction, require_authority};
 use crate::state::AppState;
 use serde::Serialize;
 use std::sync::Arc;
@@ -110,6 +111,8 @@ pub async fn link_signal_to_issue(
     issue_id: String,
     state: State<'_, Arc<AppState>>,
 ) -> Result<Signal, String> {
+    require_authority(state.current_user_role()?, AuthorityAction::LinkSignal)?;
+
     let user_id = state.current_user_id();
 
     repository::link_signal_to_issue(&state.pool, &signal_id, &issue_id, &user_id)

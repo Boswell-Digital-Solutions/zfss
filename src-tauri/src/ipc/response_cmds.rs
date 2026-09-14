@@ -3,10 +3,9 @@
 //! Commands for drafting, approving, and sending responses.
 //! Responses follow a workflow: draft -> pending -> approved -> sent (or blocked)
 
-use crate::models::{
-    ApprovalState, Response, ResponseChannel, ResponseCreate, ResponseSummary, UserRole,
-};
+use crate::models::{ApprovalState, Response, ResponseChannel, ResponseCreate, ResponseSummary};
 use crate::repository;
+use crate::service::{AuthorityAction, require_authority};
 use crate::state::AppState;
 use std::sync::Arc;
 use tauri::State;
@@ -21,6 +20,8 @@ pub async fn draft_response(
     body: String,
     state: State<'_, Arc<AppState>>,
 ) -> Result<Response, String> {
+    require_authority(state.current_user_role()?, AuthorityAction::DraftResponse)?;
+
     // Validate body
     if body.trim().is_empty() {
         return Err("body cannot be empty".to_string());
@@ -114,13 +115,7 @@ pub async fn approve_response(
     state: State<'_, Arc<AppState>>,
 ) -> Result<Response, String> {
     // Enforce Steward-only authority
-    let role = state.current_user_role();
-    if !role.can_approve_response() {
-        return Err(format!(
-            "Permission denied: only Stewards can approve responses (current role: {:?})",
-            role
-        ));
-    }
+    require_authority(state.current_user_role()?, AuthorityAction::ApproveResponse)?;
 
     let actor = state.current_user_id();
 
@@ -144,13 +139,7 @@ pub async fn block_response(
     state: State<'_, Arc<AppState>>,
 ) -> Result<Response, String> {
     // Enforce Steward-only authority
-    let role = state.current_user_role();
-    if !role.can_approve_response() {
-        return Err(format!(
-            "Permission denied: only Stewards can block responses (current role: {:?})",
-            role
-        ));
-    }
+    require_authority(state.current_user_role()?, AuthorityAction::ApproveResponse)?;
 
     if reason.trim().is_empty() {
         return Err("block reason cannot be empty".to_string());

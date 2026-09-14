@@ -32,7 +32,8 @@
 
 **Delivered:** frontend build, documentation/authority validation, Rust unit-test and formatting
 gates, full migration replay, a disposable PostgreSQL append-only contract test, fail-closed model
-transition matrices, and the complete role-capability matrix.
+transition matrices, the complete role-capability matrix, centralized IPC authority enforcement,
+and fail-closed configured-role resolution.
 
-**Remaining:** direct IPC role-enforcement, database-backed lifecycle-transition, and repository
+**Remaining:** direct IPC input-validation, database-backed lifecycle-transition, and repository
 integration tests.
