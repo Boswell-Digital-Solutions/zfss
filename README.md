@@ -9,7 +9,7 @@ Feedback metabolism for the Forge ecosystem. A Tauri v2 desktop application with
 
 - **Repo type:** Desktop/local system
 - **Authority boundary:** Local feedback capture and metabolism with repo-local durable state; it is not part of the Forge shared resident-service mesh
-- **Deep reference:** `doc/system/_index.md`, `doc/zsSYSTEM.md`, `../docs/canonical/documentation_protocol_v1.md`
+- **Deep reference:** `doc/system/_index.md`, generated `doc/ZFSSYSTEM.md`, `../docs/canonical/documentation_protocol_v1.md`
 - **README role:** Product overview and local run entrypoint
 - **Truth note:** Version lines, phase labels, and implementation totals in this README are snapshot facts unless explicitly marked as canonical doctrine or target values
 

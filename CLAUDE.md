@@ -3,8 +3,9 @@
 Zen Feedback & Service System: capture, triage, and respond to user feedback. Tauri desktop app,
 **append-only** feedback store.
 
-Canonical reference: `doc/system/` → root `SYSTEM.md` (`bash doc/system/BUILD.sh`). `SYSTEM.md` is
-a build artifact; edit the parts, never the artifact.
+Canonical reference: `doc/system/` → generated `doc/ZFSSYSTEM.md`
+(`bash doc/system/BUILD.sh`). `doc/ZFSSYSTEM.md` is a build artifact; edit the parts,
+never the artifact.
 
 ---
 

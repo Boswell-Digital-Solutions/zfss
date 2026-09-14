@@ -19,7 +19,7 @@
 - root `CLAUDE.md`
 - modular `doc/system/`
 - `doc/system/BUILD.sh`
-- root `SYSTEM.md`
+- generated `doc/ZFSSYSTEM.md`
 - `scripts/context-bundle.sh`
 
 ## Phase 1 — Exact Surface Expansion

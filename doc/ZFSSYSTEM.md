@@ -236,7 +236,7 @@ zfss/
 │   │   ├── _index.md
 │   │   ├── BUILD.sh
 │   │   └── 01-*.md through 11-*.md
-│   └── zsSYSTEM.md                  # Assembled output
+│   └── ZFSSYSTEM.md                 # Generated canonical output
 │
 ├── package.json
 ├── vite.config.ts
