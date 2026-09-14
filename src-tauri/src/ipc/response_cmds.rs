@@ -6,6 +6,7 @@
 use crate::models::{ApprovalState, Response, ResponseChannel, ResponseCreate, ResponseSummary};
 use crate::repository;
 use crate::service::{AuthorityAction, require_authority};
+use crate::service::input::{require_id, require_text};
 use crate::state::AppState;
 use std::sync::Arc;
 use tauri::State;
@@ -22,10 +23,12 @@ pub async fn draft_response(
 ) -> Result<Response, String> {
     require_authority(state.current_user_role()?, AuthorityAction::DraftResponse)?;
 
-    // Validate body
-    if body.trim().is_empty() {
-        return Err("body cannot be empty".to_string());
+    require_id(&signal_id, "signal_id", "sig")?;
+    if let Some(value) = issue_id.as_deref() {
+        require_id(value, "issue_id", "iss")?;
     }
+    require_text(&response_class, "response_class", 1, Some(100))?;
+    require_text(&body, "body", 1, None)?;
 
     // Parse channel
     let channel_enum = ResponseChannel::from_str(&channel).ok_or_else(|| {
@@ -72,6 +75,7 @@ pub async fn get_response(
     id: String,
     state: State<'_, Arc<AppState>>,
 ) -> Result<Option<Response>, String> {
+    require_id(&id, "id", "rsp")?;
     repository::get_response(&state.pool, &id)
         .await
         .map_err(|e| format!("Failed to get response: {}", e))
@@ -83,6 +87,7 @@ pub async fn list_responses_for_signal(
     signal_id: String,
     state: State<'_, Arc<AppState>>,
 ) -> Result<Vec<ResponseSummary>, String> {
+    require_id(&signal_id, "signal_id", "sig")?;
     repository::list_responses_for_signal(&state.pool, &signal_id)
         .await
         .map_err(|e| format!("Failed to list responses: {}", e))
@@ -94,6 +99,7 @@ pub async fn submit_response(
     response_id: String,
     state: State<'_, Arc<AppState>>,
 ) -> Result<Response, String> {
+    require_id(&response_id, "response_id", "rsp")?;
     let actor = state.current_user_id();
 
     repository::transition_response_state(
@@ -116,6 +122,7 @@ pub async fn approve_response(
 ) -> Result<Response, String> {
     // Enforce Steward-only authority
     require_authority(state.current_user_role()?, AuthorityAction::ApproveResponse)?;
+    require_id(&response_id, "response_id", "rsp")?;
 
     let actor = state.current_user_id();
 
@@ -141,9 +148,8 @@ pub async fn block_response(
     // Enforce Steward-only authority
     require_authority(state.current_user_role()?, AuthorityAction::ApproveResponse)?;
 
-    if reason.trim().is_empty() {
-        return Err("block reason cannot be empty".to_string());
-    }
+    require_id(&response_id, "response_id", "rsp")?;
+    require_text(&reason, "reason", 1, None)?;
 
     let actor = state.current_user_id();
 
@@ -165,6 +171,7 @@ pub async fn mark_response_sent(
     response_id: String,
     state: State<'_, Arc<AppState>>,
 ) -> Result<Response, String> {
+    require_id(&response_id, "response_id", "rsp")?;
     let actor = state.current_user_id();
 
     repository::transition_response_state(

@@ -6,6 +6,7 @@ use crate::constraints::MAX_RAW_TEXT_BYTES;
 use crate::models::{Signal, SignalCreate, SignalSource, SignalStatus};
 use crate::repository;
 use crate::service::{AuthorityAction, require_authority};
+use crate::service::input::{list_limit, require_id, require_text, truncate_utf8};
 use crate::state::AppState;
 use serde::Serialize;
 use std::sync::Arc;
@@ -36,16 +37,13 @@ pub async fn capture_signal(
     })?;
 
     // Validate raw_text is not empty
-    if raw_text.trim().is_empty() {
-        return Err("raw_text cannot be empty".to_string());
+    require_text(&raw_text, "raw_text", 1, None)?;
+    if let Some(value) = app_key.as_deref() {
+        require_text(value, "app_key", 1, Some(100))?;
     }
 
     // Truncate if too long
-    let raw_text = if raw_text.len() > MAX_RAW_TEXT_BYTES {
-        format!("{}... [truncated]", &raw_text[..MAX_RAW_TEXT_BYTES - 15])
-    } else {
-        raw_text
-    };
+    let raw_text = truncate_utf8(raw_text, MAX_RAW_TEXT_BYTES, "... [truncated]");
 
     let created_by = state.current_user_id();
     let signal = repository::append_signal(
@@ -77,7 +75,7 @@ pub async fn list_signals(
     limit: Option<i32>,
     state: State<'_, Arc<AppState>>,
 ) -> Result<Vec<Signal>, String> {
-    let limit = (limit.unwrap_or(50).min(100)) as i64;
+    let limit = list_limit(limit)?;
 
     let status_filter = if let Some(status_value) = status {
         Some(
@@ -99,6 +97,7 @@ pub async fn get_signal(
     id: String,
     state: State<'_, Arc<AppState>>,
 ) -> Result<Option<Signal>, String> {
+    require_id(&id, "id", "sig")?;
     repository::get_signal(&state.pool, &id)
         .await
         .map_err(|e| format!("Failed to get signal: {}", e))
@@ -112,6 +111,8 @@ pub async fn link_signal_to_issue(
     state: State<'_, Arc<AppState>>,
 ) -> Result<Signal, String> {
     require_authority(state.current_user_role()?, AuthorityAction::LinkSignal)?;
+    require_id(&signal_id, "signal_id", "sig")?;
+    require_id(&issue_id, "issue_id", "iss")?;
 
     let user_id = state.current_user_id();
 

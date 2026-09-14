@@ -66,7 +66,7 @@ Enforces append-only semantics at the code level:
 ### Service Layer (service/)
 
 Business logic enforcement:
-- Input validation (text length, enum values)
+- Centralized fail-closed IPC validation (typed ID shape, Unicode-safe text limits, bounded list limits, enum values)
 - Role authority checks before mutations
 - Lifecycle transition validation
 - `close_requires_artifact` rule enforcement

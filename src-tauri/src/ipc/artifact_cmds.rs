@@ -6,6 +6,7 @@
 use crate::models::{Artifact, ArtifactCreate, ArtifactSummary, ArtifactType};
 use crate::repository;
 use crate::service::{AuthorityAction, require_authority};
+use crate::service::input::{require_id, require_text};
 use crate::state::AppState;
 use std::sync::Arc;
 use tauri::State;
@@ -24,13 +25,10 @@ pub async fn create_artifact(
     // Enforce Engineer or Steward authority
     require_authority(state.current_user_role()?, AuthorityAction::CreateArtifact)?;
 
-    // Validate title
-    if title.trim().is_empty() {
-        return Err("title cannot be empty".to_string());
-    }
-
-    if title.len() > 500 {
-        return Err("title cannot exceed 500 characters".to_string());
+    require_id(&issue_id, "issue_id", "iss")?;
+    require_text(&title, "title", 1, Some(500))?;
+    if let Some(value) = ref_url.as_deref() {
+        require_text(value, "ref_url", 1, Some(1000))?;
     }
 
     // Parse artifact type
@@ -71,6 +69,7 @@ pub async fn get_artifact(
     id: String,
     state: State<'_, Arc<AppState>>,
 ) -> Result<Option<Artifact>, String> {
+    require_id(&id, "id", "art")?;
     repository::get_artifact(&state.pool, &id)
         .await
         .map_err(|e| format!("Failed to get artifact: {}", e))
@@ -82,6 +81,7 @@ pub async fn list_artifacts_for_issue(
     issue_id: String,
     state: State<'_, Arc<AppState>>,
 ) -> Result<Vec<ArtifactSummary>, String> {
+    require_id(&issue_id, "issue_id", "iss")?;
     repository::list_artifacts_for_issue(&state.pool, &issue_id)
         .await
         .map_err(|e| format!("Failed to list artifacts: {}", e))
@@ -95,6 +95,7 @@ pub async fn verify_artifact(
 ) -> Result<Artifact, String> {
     // Enforce Steward-only authority
     require_authority(state.current_user_role()?, AuthorityAction::VerifyArtifact)?;
+    require_id(&artifact_id, "artifact_id", "art")?;
 
     let verified_by = state.current_user_id();
 
@@ -109,6 +110,7 @@ pub async fn has_verified_artifact(
     issue_id: String,
     state: State<'_, Arc<AppState>>,
 ) -> Result<bool, String> {
+    require_id(&issue_id, "issue_id", "iss")?;
     repository::has_verified_artifact(&state.pool, &issue_id)
         .await
         .map_err(|e| format!("Failed to check verified artifacts: {}", e))
