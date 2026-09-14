@@ -23,7 +23,6 @@ pub use response_cmds::{
 pub use signal_cmds::{capture_signal, get_signal, link_signal_to_issue, list_signals};
 
 #[cfg(test)]
-#[allow(macro_expanded_macro_exports_accessed_by_absolute_paths)]
 mod command_error_contract_tests {
     use super::{capture_signal, create_issue};
     use crate::{
