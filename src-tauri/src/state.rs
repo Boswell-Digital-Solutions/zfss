@@ -4,7 +4,7 @@
 
 use crate::config::Settings;
 use crate::models::{CurrentUser, UserRole};
-use crate::service::error::identity_error;
+use crate::service::error::{IpcError, identity_error};
 use sqlx::PgPool;
 use std::sync::Mutex;
 use std::time::Instant;
@@ -54,7 +54,7 @@ impl AppState {
     }
 
     /// Get the current user role (from settings or authenticated user)
-    pub fn current_user_role(&self) -> Result<UserRole, String> {
+    pub fn current_user_role(&self) -> Result<UserRole, IpcError> {
         let guard = self
             .current_user
             .lock()
@@ -86,6 +86,7 @@ mod tests {
     use super::AppState;
     use crate::config::Settings;
     use crate::models::{CurrentUser, UserRole};
+    use crate::service::error::{IpcError, IpcErrorCode};
     use sqlx::postgres::PgPoolOptions;
     use uuid::Uuid;
 
@@ -105,7 +106,10 @@ mod tests {
         let state = state_with_configured_role("Admin");
         assert_eq!(
             state.current_user_role(),
-            Err("ZFSS_IDENTITY_UNAVAILABLE: configured user role is invalid".to_string())
+            Err(IpcError::new(
+                IpcErrorCode::IdentityUnavailable,
+                "configured user role is invalid"
+            ))
         );
     }
 

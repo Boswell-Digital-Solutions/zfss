@@ -5,7 +5,7 @@
 use crate::constraints::MAX_RAW_TEXT_BYTES;
 use crate::models::{Signal, SignalCreate, SignalSource, SignalStatus};
 use crate::repository;
-use crate::service::error::{repository_error, validation_error};
+use crate::service::error::{IpcError, repository_error, validation_error};
 use crate::service::input::{list_limit, require_id, require_text, truncate_utf8};
 use crate::service::{AuthorityAction, require_authority};
 use crate::state::AppState;
@@ -28,7 +28,7 @@ pub async fn capture_signal(
     raw_text: String,
     app_key: Option<String>,
     state: State<'_, Arc<AppState>>,
-) -> Result<CaptureResult, String> {
+) -> Result<CaptureResult, IpcError> {
     // Validate source
     let source_enum = SignalSource::from_str(&source).ok_or_else(|| {
         validation_error(format!(
@@ -75,7 +75,7 @@ pub async fn list_signals(
     status: Option<String>,
     limit: Option<i32>,
     state: State<'_, Arc<AppState>>,
-) -> Result<Vec<Signal>, String> {
+) -> Result<Vec<Signal>, IpcError> {
     let limit = list_limit(limit)?;
 
     let status_filter = if let Some(status_value) = status {
@@ -97,7 +97,7 @@ pub async fn list_signals(
 pub async fn get_signal(
     id: String,
     state: State<'_, Arc<AppState>>,
-) -> Result<Option<Signal>, String> {
+) -> Result<Option<Signal>, IpcError> {
     require_id(&id, "id", "sig")?;
     repository::get_signal(&state.pool, &id)
         .await
@@ -110,7 +110,7 @@ pub async fn link_signal_to_issue(
     signal_id: String,
     issue_id: String,
     state: State<'_, Arc<AppState>>,
-) -> Result<Signal, String> {
+) -> Result<Signal, IpcError> {
     require_authority(state.current_user_role()?, AuthorityAction::LinkSignal)?;
     require_id(&signal_id, "signal_id", "sig")?;
     require_id(&issue_id, "issue_id", "iss")?;

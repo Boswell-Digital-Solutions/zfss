@@ -411,7 +411,16 @@ pub struct AppState {
 
 ### Error Handling
 
-Commands currently return `Result<T, String>`, with every expected boundary failure carrying a stable category. Validation failures use `ZFSS_VALIDATION`, denied role actions use `ZFSS_FORBIDDEN`, unavailable or invalid user-role state uses `ZFSS_IDENTITY_UNAVAILABLE`, missing entities use `ZFSS_NOT_FOUND`, invalid lifecycle conditions use `ZFSS_CONFLICT`, and repository failures use `ZFSS_REPOSITORY_UNAVAILABLE` or `ZFSS_INTERNAL` as appropriate. Repository messages are centrally redacted, so raw SQLx messages, connection strings, hosts, credentials, and internal context chains are never returned to the frontend.
+Commands return `Result<T, IpcError>`. Tauri serializes failures as an object with a stable machine-readable code and a redacted human-readable message:
+
+```json
+{
+  "code": "ZFSS_VALIDATION",
+  "message": "title must contain at least 1 character(s)"
+}
+```
+
+Validation failures use `ZFSS_VALIDATION`, denied role actions use `ZFSS_FORBIDDEN`, unavailable or invalid user-role state uses `ZFSS_IDENTITY_UNAVAILABLE`, missing entities use `ZFSS_NOT_FOUND`, invalid lifecycle conditions use `ZFSS_CONFLICT`, and repository failures use `ZFSS_REPOSITORY_UNAVAILABLE` or `ZFSS_INTERNAL` as appropriate. Repository messages are centrally redacted, so raw SQLx messages, connection strings, hosts, credentials, and internal context chains are never returned to the frontend.
 
 ### Global Hotkey
 
@@ -505,6 +514,7 @@ Business logic enforcement:
 - Lifecycle transition validation
 - `close_requires_artifact` rule enforcement
 - Stable public codes for validation, authority, identity, lifecycle, repository, and database failures at the IPC boundary
+- A typed `IpcError { code, message }` envelope serialized directly by Tauri
 - Central redaction of repository details before failures cross IPC
 
 ### Repository Integration Contract
@@ -873,8 +883,8 @@ The `db/pool.rs` module creates a `PgPool` with:
 1. Expand the service layer beyond its centralized role-authority checks
 2. Implement the dedicated lifecycle state-machine layer
 3. Connect the existing router and management views to the active frontend entrypoint
-4. Replace string return errors with a structured serializable IPC envelope
-5. Add frontend handling for stable IPC error codes
+4. Add frontend handling for the structured IPC error envelope
+5. Add command-level tests for serialized Tauri failure responses
 
 ### Dev Quickref
 
