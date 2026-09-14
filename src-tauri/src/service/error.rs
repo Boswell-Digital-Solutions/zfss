@@ -195,10 +195,7 @@ mod tests {
     fn database_failures_are_redacted() {
         assert_eq!(
             repository_error("list signals", sqlx::Error::PoolTimedOut.into()),
-            IpcError::new(
-                IpcErrorCode::RepositoryUnavailable,
-                "list signals failed"
-            )
+            IpcError::new(IpcErrorCode::RepositoryUnavailable, "list signals failed")
         );
 
         let rendered = repository_error(
