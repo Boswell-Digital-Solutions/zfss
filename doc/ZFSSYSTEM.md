@@ -828,7 +828,7 @@ The `db/pool.rs` module creates a `PgPool` with:
 | Phase | Description | Status |
 |-------|-------------|--------|
 | Phase 1 | Foundation (Tauri, PostgreSQL, Signal capture, hotkey) | Complete |
-| Phase 2 | CRUD Operations (all 5 object repositories + services) | In Progress |
+| Phase 2 | CRUD Operations (all 5 object repositories implemented; service layer pending) | In Progress |
 | Phase 3 | Lifecycle Enforcement (state machines, role checks) | Planned |
 | Phase 4 | Frontend Views (issues, decisions, artifacts, dashboard) | Planned |
 | Phase 5 | Offline Support (SQLite write-behind buffer) | Optional |
@@ -845,11 +845,11 @@ The `db/pool.rs` module creates a `PgPool` with:
 
 ### Known Issues
 
-- Repository and service modules are stubs (signatures exist, implementation pending)
-- Frontend views beyond signal capture are planned but not built
-- Lifecycle enforcement exists as module structure but not yet wired
-- No test suite yet
-- No CI/CD pipeline
+- Repository operations are implemented, but the dedicated service module remains a placeholder
+- Frontend view modules exist, but the active entrypoint still exposes only signal capture
+- The dedicated lifecycle module remains a placeholder; transition logic currently lives outside that layer
+- Rust coverage is limited to typed-ID unit tests; IPC and lifecycle behavior lack direct unit tests
+- CI covers frontend build, documentation and authority checks, Rust tests/formatting, migration replay, and the PostgreSQL append-only contract
 
 ### Critical Constraints
 
@@ -860,11 +860,11 @@ The `db/pool.rs` module creates a `PgPool` with:
 
 ### Next Priorities
 
-1. Complete repository module implementations (append_issue, append_decision, etc.)
-2. Wire service layer with business logic
-3. Implement lifecycle state machine enforcement
-4. Build frontend views for Issue management
-5. Add test coverage for IPC commands and lifecycle transitions
+1. Wire the service layer with business logic and role checks
+2. Implement the dedicated lifecycle state-machine layer
+3. Connect the existing router and management views to the active frontend entrypoint
+4. Add direct tests for IPC validation, roles, and lifecycle transitions
+5. Add repository integration cases beyond the append-only database contract
 
 ### Dev Quickref
 

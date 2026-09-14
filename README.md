@@ -160,8 +160,8 @@ draft → pending → approved → sent
 - [x] Global hotkey (Ctrl+Alt+Z)
 - [x] Frontend signal capture UI
 
-### Phase 2: CRUD Operations (Pending)
-- [ ] Complete repository modules
+### Phase 2: CRUD Operations (In Progress)
+- [x] Complete repository modules
 - [ ] Complete service modules
 - [ ] All IPC commands for 5 objects
 - [ ] Status history tables
