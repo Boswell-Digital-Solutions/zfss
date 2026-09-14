@@ -433,6 +433,8 @@ Validation failures use `ZFSS_VALIDATION`, denied role actions use `ZFSS_FORBIDD
 
 The frontend admits only this documented envelope and code set. Malformed rejection values fail closed to `An unexpected application error occurred. (ZFSS_INTERNAL)`; their original contents are not displayed.
 
+Rust command-boundary tests send real `InvokeRequest` values through Tauri's generated handlers and assert the serialized rejection object for both validation and role-authority failures. These tests do not stop at helper return values.
+
 ### Global Hotkey
 
 **Ctrl+Alt+Z** — toggles signal capture window visibility. Implemented via `tauri-plugin-global-shortcut` with 100ms debounce to prevent rapid re-triggering.
@@ -531,6 +533,8 @@ Business logic enforcement:
 ### Repository Integration Contract
 
 CI runs the Rust repository layer against an ephemeral PostgreSQL 16 database through the complete Signal → Issue → Decision → Artifact → Response lifecycle. The contract verifies projected state, signal-link counts, artifact verification, and response approval metadata.
+
+The Rust suite also uses Tauri's mock runtime to exercise generated command handlers. Invalid capture input and a denied issue-creation action must emerge from the actual IPC dispatcher as exact `{ code, message }` rejection envelopes.
 
 ### Constraints (constraints.rs)
 
@@ -879,7 +883,7 @@ The `db/pool.rs` module creates a `PgPool` with:
 - Repository operations and centralized role authorization are implemented; broader service-layer business logic remains pending
 - Frontend view modules exist, but the active entrypoint still exposes only signal capture
 - The dedicated lifecycle module remains a placeholder; transition logic currently lives outside that layer
-- Rust coverage includes typed IDs, fail-closed IPC input validation, redacted repository-error translation, model transitions, role capabilities, IPC authority decisions, fail-closed role resolution, and a PostgreSQL-backed end-to-end repository lifecycle; SQL contracts cover append-only projections
+- Rust coverage includes typed IDs, fail-closed IPC input validation, serialized command-boundary rejection envelopes, redacted repository-error translation, model transitions, role capabilities, IPC authority decisions, fail-closed role resolution, and a PostgreSQL-backed end-to-end repository lifecycle; SQL contracts cover append-only projections
 - CI covers frontend IPC error tests/typechecking/build, documentation and authority checks, Rust tests/formatting, migration replay, and the PostgreSQL append-only contract
 
 ### Critical Constraints
@@ -894,8 +898,8 @@ The `db/pool.rs` module creates a `PgPool` with:
 1. Expand the service layer beyond its centralized role-authority checks
 2. Implement the dedicated lifecycle state-machine layer
 3. Connect the existing router and management views to the active frontend entrypoint
-4. Add command-level tests for serialized Tauri failure responses
-5. Replace prompt/alert management actions with governed forms
+4. Replace prompt/alert management actions with governed forms
+5. Add frontend retry and recovery behavior by IPC error category
 
 ### Dev Quickref
 

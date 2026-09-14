@@ -78,6 +78,8 @@ Business logic enforcement:
 
 CI runs the Rust repository layer against an ephemeral PostgreSQL 16 database through the complete Signal → Issue → Decision → Artifact → Response lifecycle. The contract verifies projected state, signal-link counts, artifact verification, and response approval metadata.
 
+The Rust suite also uses Tauri's mock runtime to exercise generated command handlers. Invalid capture input and a denied issue-creation action must emerge from the actual IPC dispatcher as exact `{ code, message }` rejection envelopes.
+
 ### Constraints (constraints.rs)
 
 | Constant | Value | Purpose |

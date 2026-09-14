@@ -83,6 +83,8 @@ Validation failures use `ZFSS_VALIDATION`, denied role actions use `ZFSS_FORBIDD
 
 The frontend admits only this documented envelope and code set. Malformed rejection values fail closed to `An unexpected application error occurred. (ZFSS_INTERNAL)`; their original contents are not displayed.
 
+Rust command-boundary tests send real `InvokeRequest` values through Tauri's generated handlers and assert the serialized rejection object for both validation and role-authority failures. These tests do not stop at helper return values.
+
 ### Global Hotkey
 
 **Ctrl+Alt+Z** — toggles signal capture window visibility. Implemented via `tauri-plugin-global-shortcut` with 100ms debounce to prevent rapid re-triggering.
