@@ -13,6 +13,7 @@ mod db;
 mod ipc;
 mod models;
 mod repository;
+mod service;
 mod state;
 
 use crate::config::Settings;

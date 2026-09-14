@@ -5,7 +5,7 @@
 | Phase | Description | Status |
 |-------|-------------|--------|
 | Phase 1 | Foundation (Tauri, PostgreSQL, Signal capture, hotkey) | Complete |
-| Phase 2 | CRUD Operations (all 5 object repositories implemented; service layer pending) | In Progress |
+| Phase 2 | CRUD Operations (repositories and authority service implemented; broader service layer pending) | In Progress |
 | Phase 3 | Lifecycle Enforcement (state machines, role checks) | Planned |
 | Phase 4 | Frontend Views (issues, decisions, artifacts, dashboard) | Planned |
 | Phase 5 | Offline Support (SQLite write-behind buffer) | Optional |
@@ -22,10 +22,10 @@
 
 ### Known Issues
 
-- Repository operations are implemented, but the dedicated service module remains a placeholder
+- Repository operations and centralized role authorization are implemented; broader service-layer business logic remains pending
 - Frontend view modules exist, but the active entrypoint still exposes only signal capture
 - The dedicated lifecycle module remains a placeholder; transition logic currently lives outside that layer
-- Rust coverage includes typed IDs, fail-closed model transition matrices, and the role-capability matrix; IPC enforcement and database-backed lifecycle behavior lack direct tests
+- Rust coverage includes typed IDs, fail-closed model transitions, role capabilities, IPC authority decisions, and fail-closed role resolution; database-backed lifecycle behavior lacks direct tests
 - CI covers frontend build, documentation and authority checks, Rust tests/formatting, migration replay, and the PostgreSQL append-only contract
 
 ### Critical Constraints
@@ -37,10 +37,10 @@
 
 ### Next Priorities
 
-1. Wire the service layer with business logic and role checks
+1. Expand the service layer beyond its centralized role-authority checks
 2. Implement the dedicated lifecycle state-machine layer
 3. Connect the existing router and management views to the active frontend entrypoint
-4. Add direct tests for IPC validation, role enforcement, and database-backed lifecycle transitions
+4. Add direct tests for IPC input validation and database-backed lifecycle transitions
 5. Add repository integration cases beyond the append-only database contract
 
 ### Dev Quickref

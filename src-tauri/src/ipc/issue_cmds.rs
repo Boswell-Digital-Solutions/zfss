@@ -4,6 +4,7 @@
 
 use crate::models::{Classification, Issue, IssueCreate, IssueStatus, IssueSummary, Severity};
 use crate::repository;
+use crate::service::{AuthorityAction, require_authority};
 use crate::state::AppState;
 use std::sync::Arc;
 use tauri::State;
@@ -17,6 +18,8 @@ pub async fn create_issue(
     severity: String,
     state: State<'_, Arc<AppState>>,
 ) -> Result<Issue, String> {
+    require_authority(state.current_user_role()?, AuthorityAction::CreateIssue)?;
+
     // Validate title
     if title.trim().is_empty() {
         return Err("title cannot be empty".to_string());
@@ -109,6 +112,8 @@ pub async fn transition_issue(
 
     // Special handling for closing: check if artifact is required
     if new_status_enum == IssueStatus::Closed {
+        require_authority(state.current_user_role()?, AuthorityAction::CloseIssue)?;
+
         let issue = repository::get_issue(&state.pool, &issue_id)
             .await
             .map_err(|e| format!("Failed to get issue: {}", e))?
