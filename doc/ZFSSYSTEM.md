@@ -848,7 +848,7 @@ The `db/pool.rs` module creates a `PgPool` with:
 - Repository operations are implemented, but the dedicated service module remains a placeholder
 - Frontend view modules exist, but the active entrypoint still exposes only signal capture
 - The dedicated lifecycle module remains a placeholder; transition logic currently lives outside that layer
-- Rust coverage is limited to typed-ID unit tests; IPC and lifecycle behavior lack direct unit tests
+- Rust coverage includes typed IDs, fail-closed model transition matrices, and the role-capability matrix; IPC enforcement and database-backed lifecycle behavior lack direct tests
 - CI covers frontend build, documentation and authority checks, Rust tests/formatting, migration replay, and the PostgreSQL append-only contract
 
 ### Critical Constraints
@@ -863,7 +863,7 @@ The `db/pool.rs` module creates a `PgPool` with:
 1. Wire the service layer with business logic and role checks
 2. Implement the dedicated lifecycle state-machine layer
 3. Connect the existing router and management views to the active frontend entrypoint
-4. Add direct tests for IPC validation, roles, and lifecycle transitions
+4. Add direct tests for IPC validation, role enforcement, and database-backed lifecycle transitions
 5. Add repository integration cases beyond the append-only database contract
 
 ### Dev Quickref

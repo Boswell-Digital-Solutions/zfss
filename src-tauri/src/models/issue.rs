@@ -178,3 +178,33 @@ pub struct IssueSummary {
     pub signal_count: i64,
     pub created_at: DateTime<Utc>,
 }
+
+#[cfg(test)]
+mod tests {
+    use super::IssueStatus;
+
+    #[test]
+    fn issue_transition_matrix_is_fail_closed() {
+        use IssueStatus::*;
+        let states = [PendingDecision, Decided, InProgress, ReadyForVerification, Closed];
+        let allowed = [
+            (PendingDecision, Decided),
+            (Decided, InProgress),
+            (InProgress, ReadyForVerification),
+            (ReadyForVerification, Closed),
+            (ReadyForVerification, InProgress),
+        ];
+
+        for current in states {
+            for next in states {
+                assert_eq!(
+                    current.can_transition_to(next),
+                    allowed.contains(&(current, next)),
+                    "unexpected issue transition: {} -> {}",
+                    current.as_str(),
+                    next.as_str()
+                );
+            }
+        }
+    }
+}
