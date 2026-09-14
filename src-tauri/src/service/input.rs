@@ -8,7 +8,9 @@ pub fn require_text(
 ) -> Result<(), String> {
     let count = value.trim().chars().count();
     if count < min_chars {
-        return Err(format!("{field} must contain at least {min_chars} character(s)"));
+        return Err(format!(
+            "{field} must contain at least {min_chars} character(s)"
+        ));
     }
     if let Some(max) = max_chars {
         if count > max {

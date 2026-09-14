@@ -5,8 +5,8 @@
 
 use crate::models::{Artifact, ArtifactCreate, ArtifactSummary, ArtifactType};
 use crate::repository;
-use crate::service::{AuthorityAction, require_authority};
 use crate::service::input::{require_id, require_text};
+use crate::service::{AuthorityAction, require_authority};
 use crate::state::AppState;
 use std::sync::Arc;
 use tauri::State;

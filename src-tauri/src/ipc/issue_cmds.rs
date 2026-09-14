@@ -4,8 +4,8 @@
 
 use crate::models::{Classification, Issue, IssueCreate, IssueStatus, IssueSummary, Severity};
 use crate::repository;
-use crate::service::{AuthorityAction, require_authority};
 use crate::service::input::{list_limit, require_id, require_text};
+use crate::service::{AuthorityAction, require_authority};
 use crate::state::AppState;
 use std::sync::Arc;
 use tauri::State;

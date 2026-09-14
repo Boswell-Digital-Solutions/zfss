@@ -5,8 +5,8 @@
 use crate::constraints::MAX_RAW_TEXT_BYTES;
 use crate::models::{Signal, SignalCreate, SignalSource, SignalStatus};
 use crate::repository;
-use crate::service::{AuthorityAction, require_authority};
 use crate::service::input::{list_limit, require_id, require_text, truncate_utf8};
+use crate::service::{AuthorityAction, require_authority};
 use crate::state::AppState;
 use serde::Serialize;
 use std::sync::Arc;
