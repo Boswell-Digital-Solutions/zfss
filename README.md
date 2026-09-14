@@ -70,6 +70,17 @@ npm install
 npm run tauri dev
 ```
 
+### Test
+
+```bash
+npm ci
+npm run build
+cargo test --manifest-path src-tauri/Cargo.toml --locked
+bash doc/system/BUILD.sh
+```
+
+CI also applies every migration to disposable PostgreSQL 16 and runs `tests/postgres_contract.sql`. It proves INSERT succeeds, UPDATE and DELETE fail against a real canonical row, all five mutation guards exist, and the pending-triage view exposes a new unlinked Signal. It never targets a configured production database.
+
 ### Build for Production
 
 ```bash
