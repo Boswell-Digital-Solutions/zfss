@@ -4,8 +4,9 @@
  * View a single issue with decisions, artifacts, and linked signals.
  */
 
-import { el, setContent, router } from "../lib/router";
+import { el, setContent } from "../lib/router";
 import * as api from "../lib/api";
+import { formatIpcError } from "../lib/ipc-error";
 import type { Issue, IssueStatus, DecisionType, ArtifactType } from "../lib/types";
 
 export async function render(container: HTMLElement, params: Record<string, string>): Promise<void> {
@@ -137,14 +138,13 @@ export async function render(container: HTMLElement, params: Record<string, stri
     setContent(container, view);
 
     // Setup event listeners
-    setupEventListeners(issue, hasVerified);
+    setupEventListeners(issue);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
     setContent(
       container,
       el("div", { className: "error-state" }, [
         el("h3", {}, ["Error loading issue"]),
-        el("p", {}, [errorMessage]),
+        el("p", {}, [formatIpcError(error)]),
       ])
     );
   }
@@ -189,7 +189,7 @@ function renderStatusActions(issue: Issue, hasVerified: boolean): HTMLElement {
     : el("span", {}, []);
 }
 
-function setupEventListeners(issue: Issue, hasVerified: boolean): void {
+function setupEventListeners(issue: Issue): void {
   // Record decision button
   const decisionBtn = document.getElementById("record-decision-btn");
   if (decisionBtn) {
@@ -210,7 +210,7 @@ function setupEventListeners(issue: Issue, hasVerified: boolean): void {
         await api.recordDecision(issue.id, decisionType as DecisionType, rationale);
         location.reload();
       } catch (error) {
-        alert(`Error: ${error}`);
+        alert(`Error: ${formatIpcError(error)}`);
       }
     });
   }
@@ -231,7 +231,7 @@ function setupEventListeners(issue: Issue, hasVerified: boolean): void {
         await api.createArtifact(issue.id, artifactType as ArtifactType, title, undefined, refUrl || undefined);
         location.reload();
       } catch (error) {
-        alert(`Error: ${error}`);
+        alert(`Error: ${formatIpcError(error)}`);
       }
     });
   }
@@ -246,7 +246,7 @@ function setupEventListeners(issue: Issue, hasVerified: boolean): void {
         await api.transitionIssue(issue.id, newStatus, reason || undefined);
         location.reload();
       } catch (error) {
-        alert(`Error: ${error}`);
+        alert(`Error: ${formatIpcError(error)}`);
       }
     });
   });
@@ -260,7 +260,7 @@ function setupEventListeners(issue: Issue, hasVerified: boolean): void {
         await api.verifyArtifact(artifactId);
         location.reload();
       } catch (error) {
-        alert(`Error: ${error}`);
+        alert(`Error: ${formatIpcError(error)}`);
       }
     });
   });

@@ -4,9 +4,9 @@
  * Fast signal capture form (<60s target).
  */
 
-import { el, setContent, router } from "../lib/router";
+import { el, setContent } from "../lib/router";
 import * as api from "../lib/api";
-import type { SignalSource } from "../lib/types";
+import { formatIpcError } from "../lib/ipc-error";
 
 export async function render(container: HTMLElement): Promise<void> {
   const view = el("div", { className: "capture-view" }, [
@@ -104,8 +104,7 @@ export async function render(container: HTMLElement): Promise<void> {
         rawTextEl.focus();
       }, 1500);
     } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : String(error);
-      showStatus(`Error: ${errorMessage}`, "error");
+      showStatus(`Error: ${formatIpcError(error)}`, "error");
     } finally {
       isCapturing = false;
     }

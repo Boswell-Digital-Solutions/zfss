@@ -6,8 +6,11 @@ zfss/
 │   ├── index.html                   # HTML entry point
 │   ├── main.ts                      # Signal capture UI + initialization
 │   ├── styles.css                   # Global styles
+│   ├── views/                       # Routed management view modules
 │   └── lib/
 │       ├── api.ts                   # Tauri IPC wrappers (25+ functions)
+│       ├── ipc-error.ts             # Fail-closed frontend IPC error parser
+│       ├── ipc-error.test.ts        # Error boundary contract tests
 │       ├── router.ts                # Hash-based SPA router
 │       └── types.ts                 # Type definitions for all models
 │
@@ -85,10 +88,10 @@ zfss/
 
 | Category | Count |
 |----------|-------|
-| TypeScript source files | 6 |
+| TypeScript source files | 12 |
 | Rust source files | 25 |
 | IPC command modules | 5 |
 | Database tables | 11 |
 | Database views | 7 |
-| Migrations | 3 |
+| Migrations | 4 |
 | Operational scripts | 7 |

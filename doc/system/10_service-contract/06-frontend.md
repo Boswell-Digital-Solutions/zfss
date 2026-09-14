@@ -72,6 +72,12 @@ TypeScript type definitions mirroring Rust models:
 - Model interfaces: `Signal`, `Issue`, `Decision`, `Artifact`, `Response`
 - Role enum: `UserRole`
 
+### IPC Error Boundary (lib/ipc-error.ts)
+
+All command failures pass through one frontend parser before display. It accepts only the seven documented `ZFSS_*` codes with a non-empty message, formats valid envelopes with their support code, and maps strings, ordinary `Error` objects, unknown codes, empty messages, arrays, and null values to a generic `ZFSS_INTERNAL` failure without rendering their contents.
+
+Node contract tests cover all admitted codes, user-facing formatting, and fail-closed handling of malformed or credential-bearing values. CI runs these tests and a strict application typecheck before the production build.
+
 ### Styling
 
 Global CSS in `styles.css`. No CSS framework. Minimal UI focused on fast signal capture.

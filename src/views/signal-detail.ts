@@ -6,7 +6,8 @@
 
 import { el, setContent, router } from "../lib/router";
 import * as api from "../lib/api";
-import type { Signal, Response } from "../lib/types";
+import { formatIpcError } from "../lib/ipc-error";
+import type { Signal } from "../lib/types";
 
 export async function render(container: HTMLElement, params: Record<string, string>): Promise<void> {
   const signalId = params.id;
@@ -82,7 +83,7 @@ export async function render(container: HTMLElement, params: Record<string, stri
       // Actions
       el("div", { className: "detail-actions" }, [
         !signal.linked_issue_id
-          ? createLinkToIssueButton(signalId)
+          ? createLinkToIssueButton()
           : el("span", {}, []),
         el("button", { className: "btn btn-secondary", id: "draft-response-btn" }, ["Draft Response"]),
       ]),
@@ -101,18 +102,17 @@ export async function render(container: HTMLElement, params: Record<string, stri
     // Add event listeners
     setupEventListeners(signal);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
     setContent(
       container,
       el("div", { className: "error-state" }, [
         el("h3", {}, ["Error loading signal"]),
-        el("p", {}, [errorMessage]),
+        el("p", {}, [formatIpcError(error)]),
       ])
     );
   }
 }
 
-function createLinkToIssueButton(signalId: string): HTMLElement {
+function createLinkToIssueButton(): HTMLElement {
   const btn = el("button", { className: "btn btn-primary", id: "link-issue-btn" }, ["Link to Issue"]);
   return btn;
 }
@@ -142,7 +142,7 @@ function setupEventListeners(signal: Signal): void {
           router.navigate(`/signals/${signal.id}`);
           location.reload(); // Simple refresh
         } catch (error) {
-          alert(`Error: ${error}`);
+          alert(`Error: ${formatIpcError(error)}`);
         }
       }
     });

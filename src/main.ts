@@ -6,6 +6,7 @@
 
 import { invoke } from "@tauri-apps/api/core";
 import { getCurrentWebviewWindow } from "@tauri-apps/api/webviewWindow";
+import { formatIpcError } from "./lib/ipc-error";
 
 const win = getCurrentWebviewWindow();
 
@@ -66,8 +67,7 @@ async function captureSignal(): Promise<void> {
       // win.hide();
     }, 1000);
   } catch (error) {
-    const errorMessage = error instanceof Error ? error.message : String(error);
-    showStatus(`Error: ${errorMessage}`, "error");
+    showStatus(`Error: ${formatIpcError(error)}`, "error");
     flashError();
   } finally {
     isCapturing = false;
