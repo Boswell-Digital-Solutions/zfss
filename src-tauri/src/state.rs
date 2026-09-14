@@ -103,14 +103,14 @@ mod tests {
         AppState::new(pool, settings, Uuid::nil())
     }
 
-    #[test]
-    fn invalid_configured_role_fails_closed() {
+    #[tokio::test]
+    async fn invalid_configured_role_fails_closed() {
         let state = state_with_configured_role("Admin");
         assert!(state.current_user_role().is_err());
     }
 
-    #[test]
-    fn authenticated_role_overrides_configured_role() {
+    #[tokio::test]
+    async fn authenticated_role_overrides_configured_role() {
         let state = state_with_configured_role("Steward");
         state.set_current_user(Some(CurrentUser {
             id: "user_test".to_string(),
