@@ -1,5 +1,6 @@
 // Prevents additional console window on Windows in release
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
+#![cfg_attr(test, allow(macro_expanded_macro_exports_accessed_by_absolute_paths))]
 
 //! ZFSS - Zen Feedback & Service System
 //!
