@@ -25,25 +25,25 @@ inventory that may drift between audits.
 
 | Part | File | Contents |
 | --- | --- | --- |
-| §1 | `00_overview/01-overview-philosophy.md` | 1. Overview & Philosophy |
-| §2 | `00_overview/02-architecture.md` | 2. Architecture |
-| §3 | `00_overview/04-project-structure.md` | 4. Project Structure |
-| §4 | `10_service-contract/06-frontend.md` | 6. Frontend |
-| §5 | `10_service-contract/07-tauri-commands.md` | 7. Tauri Command Interface |
-| §6 | `10_service-contract/10-product-surface.md` | Product Surface |
-| §7 | `20_runtime/08-backend-internals.md` | 8. Backend Internals |
-| §8 | `20_runtime/09-database-schema.md` | 9. Database Schema |
-| §9 | `20_runtime/20-runtime.md` | Runtime |
-| §10 | `30_dependencies/03-tech-stack.md` | 3. Tech Stack |
-| §11 | `30_dependencies/10-ecosystem-integration.md` | 10. Ecosystem Integration |
-| §12 | `30_dependencies/40-integrations.md` | Integrations |
-| §13 | `50_operations/05-config-env.md` | 5. Configuration & Environment |
-| §14 | `50_operations/11-handover.md` | 11. Handover |
-| §15 | `50_operations/50-operations.md` | Operations |
-| §16 | `99_appendices/30-data.md` | Data |
-| §17 | `99_appendices/90-appendices.md` | Appendices |
-| §18 | `99_appendices/91-bootstrap-overview.md` | Overview |
-| §19 | `99_appendices/92-bootstrap-architecture.md` | Architecture |
+| §1 | `01-overview-philosophy.md` | 1. Overview & Philosophy |
+| §2 | `02-architecture.md` | 2. Architecture |
+| §3 | `04-project-structure.md` | 4. Project Structure |
+| §4 | `06-frontend.md` | 6. Frontend |
+| §5 | `07-tauri-commands.md` | 7. Tauri Command Interface |
+| §6 | `10-product-surface.md` | Product Surface |
+| §7 | `08-backend-internals.md` | 8. Backend Internals |
+| §8 | `09-database-schema.md` | 9. Database Schema |
+| §9 | `20-runtime.md` | Runtime |
+| §10 | `03-tech-stack.md` | 3. Tech Stack |
+| §11 | `10-ecosystem-integration.md` | 10. Ecosystem Integration |
+| §12 | `40-integrations.md` | Integrations |
+| §13 | `05-config-env.md` | 5. Configuration & Environment |
+| §14 | `11-handover.md` | 11. Handover |
+| §15 | `50-operations.md` | Operations |
+| §16 | `30-data.md` | Data |
+| §17 | `90-appendices.md` | Appendices |
+| §18 | `91-bootstrap-overview.md` | Overview |
+| §19 | `92-bootstrap-architecture.md` | Architecture |
 
 ## Quick Assembly
 
@@ -162,6 +162,65 @@ Global Hotkey: Ctrl+Alt+Z (debounced toggle)
 
 ---
 
+## 3. Tech Stack
+
+### Runtime
+
+| Component | Version | Purpose |
+|-----------|---------|---------|
+| Rust | 2024 edition | Backend language |
+| TypeScript | 5.x | Frontend language |
+| Node.js | 18+ | Build tooling |
+| PostgreSQL | 14+ | ZFSS operational feedback store |
+
+### Framework
+
+| Component | Version | Purpose |
+|-----------|---------|---------|
+| Tauri | 2.0 | Desktop app framework |
+| Vite | 5.x | Frontend build system |
+
+### Rust Dependencies
+
+| Crate | Version | Purpose |
+|-------|---------|---------|
+| tauri | 2.0 | Desktop framework core |
+| tauri-plugin-global-shortcut | 2.0 | Ctrl+Alt+Z hotkey |
+| sqlx | 0.7 | Async PostgreSQL driver |
+| tokio | 1.x | Async runtime (multi-threaded) |
+| serde / serde_json | 1.x | Serialization |
+| uuid | 1.x | v4 UUID generation |
+| chrono | 0.4 | Timezone-aware timestamps |
+| directories | 5.x | OS-specific app data paths |
+| anyhow | 1.x | Error handling |
+| thiserror | 1.x | Typed errors |
+| regex | 1.x | Input validation |
+| rand | 0.8 | Random generation |
+| dotenvy | 0.15 | .env file loading |
+
+### Frontend Dependencies
+
+| Package | Version | Purpose |
+|---------|---------|---------|
+| @tauri-apps/api | 2.0 | Tauri IPC bridge |
+
+### Build Tooling
+
+| Tool | Purpose |
+|------|---------|
+| @tauri-apps/cli | Desktop app build/dev |
+| vite | Dev server + bundling |
+| typescript | Type checking |
+
+### Build Targets
+
+- Linux: `.deb`, `.appimage`
+- Dev server: `http://localhost:5173`
+- Frontend output: `dist/`
+- Browser targets: ES2021, Chrome 100+, Safari 13+
+
+---
+
 ## 4. Project Structure
 
 ```
@@ -259,6 +318,69 @@ zfss/
 | Database views | 7 |
 | Migrations | 4 |
 | Operational scripts | 7 |
+
+---
+
+## 5. Configuration & Environment
+
+### Environment Variables
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `ZFSS_DATABASE_URL` | Yes | — | PostgreSQL connection string |
+| `DATABASE_URL` | Fallback | — | Used if `ZFSS_DATABASE_URL` not set |
+| `ZFSS_USER_ID` | No | auto-generated | Current user UUID |
+| `ZFSS_USER_ROLE` | No | `steward` | User role (steward/operator/engineer/ai) |
+| `ZFSS_ALWAYS_ON_TOP` | No | `false` | Keep capture window above all windows |
+
+### Settings (config/settings.rs)
+
+```rust
+pub struct Settings {
+    pub database_url: String,      // PostgreSQL connection URL
+    pub user_id: String,           // Current user identifier
+    pub user_role: UserRole,       // Role for authority checks
+    pub always_on_top: bool,       // Window z-order preference
+}
+```
+
+Settings are loaded from environment on startup. The database URL is validated to ensure it points to PostgreSQL (must start with `postgresql://` or `postgres://`).
+
+### Device ID
+
+A persistent device UUID is stored at:
+```
+~/.local/share/zfss/device_id.txt
+```
+
+Generated on first launch via `uuid::Uuid::new_v4()`. Used to identify the device across sessions.
+
+### .env File
+
+```bash
+ZFSS_DATABASE_URL=postgresql://localhost/zfss
+```
+
+Loaded via `dotenvy` on application startup.
+
+### Database Connection
+
+The `db/pool.rs` module creates a `PgPool` with:
+- Connection string from Settings
+- Health check on startup (`SELECT 1`)
+- Pool shared via `AppState` (Arc-wrapped)
+
+### Tauri Configuration (tauri.conf.json)
+
+| Setting | Value |
+|---------|-------|
+| Product name | `zfss` |
+| Identifier | `com.forge.zfss` |
+| Window title | `ZFSS - Signal Capture` |
+| Window size | 600 × 400 |
+| Dev URL | `http://localhost:5173` |
+| Build output | `../dist` |
+| Bundle targets | `deb`, `appimage` |
 
 ---
 
@@ -441,19 +563,6 @@ Rust command-boundary tests send real `InvokeRequest` values through Tauri's gen
 
 ---
 
-# Product Surface
-
-**Document version:** 1.0 (bootstrap scaffold)
-
-User-facing product surface: routes, flows, and entry points.
-
-> This chapter is a registry-generated bootstrap scaffold for a
-> `application` class documentation system. Replace this placeholder with
-> real authored content. Registry will not invent repo truth that is not
-> already present in the repo.
-
----
-
 ## 8. Backend Internals
 
 ### Models (models/)
@@ -613,91 +722,6 @@ SignalId(format!("sig_{}", Uuid::new_v4()))
 
 ---
 
-# Runtime
-
-**Document version:** 1.0 (bootstrap scaffold)
-
-Runtime topology, process boundaries, and managed state.
-
-> This chapter is a registry-generated bootstrap scaffold for a
-> `application` class documentation system. Replace this placeholder with
-> real authored content. Registry will not invent repo truth that is not
-> already present in the repo.
-
----
-
-# Data
-
-**Document version:** 1.0 (bootstrap scaffold)
-
-Data model, persistence, and schema migration posture.
-
-> This chapter is a registry-generated bootstrap scaffold for a
-> `application` class documentation system. Replace this placeholder with
-> real authored content. Registry will not invent repo truth that is not
-> already present in the repo.
-
----
-
-## 3. Tech Stack
-
-### Runtime
-
-| Component | Version | Purpose |
-|-----------|---------|---------|
-| Rust | 2024 edition | Backend language |
-| TypeScript | 5.x | Frontend language |
-| Node.js | 18+ | Build tooling |
-| PostgreSQL | 14+ | ZFSS operational feedback store |
-
-### Framework
-
-| Component | Version | Purpose |
-|-----------|---------|---------|
-| Tauri | 2.0 | Desktop app framework |
-| Vite | 5.x | Frontend build system |
-
-### Rust Dependencies
-
-| Crate | Version | Purpose |
-|-------|---------|---------|
-| tauri | 2.0 | Desktop framework core |
-| tauri-plugin-global-shortcut | 2.0 | Ctrl+Alt+Z hotkey |
-| sqlx | 0.7 | Async PostgreSQL driver |
-| tokio | 1.x | Async runtime (multi-threaded) |
-| serde / serde_json | 1.x | Serialization |
-| uuid | 1.x | v4 UUID generation |
-| chrono | 0.4 | Timezone-aware timestamps |
-| directories | 5.x | OS-specific app data paths |
-| anyhow | 1.x | Error handling |
-| thiserror | 1.x | Typed errors |
-| regex | 1.x | Input validation |
-| rand | 0.8 | Random generation |
-| dotenvy | 0.15 | .env file loading |
-
-### Frontend Dependencies
-
-| Package | Version | Purpose |
-|---------|---------|---------|
-| @tauri-apps/api | 2.0 | Tauri IPC bridge |
-
-### Build Tooling
-
-| Tool | Purpose |
-|------|---------|
-| @tauri-apps/cli | Desktop app build/dev |
-| vite | Dev server + bundling |
-| typescript | Type checking |
-
-### Build Targets
-
-- Linux: `.deb`, `.appimage`
-- Dev server: `http://localhost:5173`
-- Frontend output: `dist/`
-- Browser targets: ES2021, Chrome 100+, Safari 13+
-
----
-
 ## 10. Ecosystem Integration
 
 ### Forge Ecosystem Position
@@ -749,110 +773,16 @@ See `docs/local_postgres_authority.md` for legacy binding operations and `contra
 
 ---
 
-# Integrations
+# Product Surface
 
 **Document version:** 1.0 (bootstrap scaffold)
 
-External integrations, upstream services, and wire contracts.
+User-facing product surface: routes, flows, and entry points.
 
 > This chapter is a registry-generated bootstrap scaffold for a
 > `application` class documentation system. Replace this placeholder with
 > real authored content. Registry will not invent repo truth that is not
 > already present in the repo.
-
----
-
-# Governance
-
-**Truth class:** canonical doctrine
-
-This documentation system governs ZFSS repo-local implementation truth. It does
-not define shared Forge ecosystem doctrine or DataForge cloud authority beyond
-the explicit integration and handoff surfaces ZFSS owns.
-
-## Authority Boundary
-
-- `doc/system/` is the canonical authored source tree for ZFSS system truth.
-- `doc/ZFSSYSTEM.md` is generated output and must not be edited by hand.
-- Supporting docs, plans, and archives outside `doc/system/` are subordinate to
-  the compiled system reference when they describe current behavior.
-- Runtime behavior and verification evidence override stale prose; when they
-  disagree, update the source chapter and rebuild the compiled artifact.
-
-## Change Control
-
-Changes that alter signal capture, issue lifecycle, database schema, response
-control, integrations, or local authority boundaries must update the relevant
-`doc/system/` chapter in the same change as the implementation.
-
-Documentation-only changes must still rebuild `doc/ZFSSYSTEM.md` with:
-
-```bash
-bash doc/system/BUILD.sh
-```
-
----
-
-## 5. Configuration & Environment
-
-### Environment Variables
-
-| Variable | Required | Default | Description |
-|----------|----------|---------|-------------|
-| `ZFSS_DATABASE_URL` | Yes | — | PostgreSQL connection string |
-| `DATABASE_URL` | Fallback | — | Used if `ZFSS_DATABASE_URL` not set |
-| `ZFSS_USER_ID` | No | auto-generated | Current user UUID |
-| `ZFSS_USER_ROLE` | No | `steward` | User role (steward/operator/engineer/ai) |
-| `ZFSS_ALWAYS_ON_TOP` | No | `false` | Keep capture window above all windows |
-
-### Settings (config/settings.rs)
-
-```rust
-pub struct Settings {
-    pub database_url: String,      // PostgreSQL connection URL
-    pub user_id: String,           // Current user identifier
-    pub user_role: UserRole,       // Role for authority checks
-    pub always_on_top: bool,       // Window z-order preference
-}
-```
-
-Settings are loaded from environment on startup. The database URL is validated to ensure it points to PostgreSQL (must start with `postgresql://` or `postgres://`).
-
-### Device ID
-
-A persistent device UUID is stored at:
-```
-~/.local/share/zfss/device_id.txt
-```
-
-Generated on first launch via `uuid::Uuid::new_v4()`. Used to identify the device across sessions.
-
-### .env File
-
-```bash
-ZFSS_DATABASE_URL=postgresql://localhost/zfss
-```
-
-Loaded via `dotenvy` on application startup.
-
-### Database Connection
-
-The `db/pool.rs` module creates a `PgPool` with:
-- Connection string from Settings
-- Health check on startup (`SELECT 1`)
-- Pool shared via `AppState` (Arc-wrapped)
-
-### Tauri Configuration (tauri.conf.json)
-
-| Setting | Value |
-|---------|-------|
-| Product name | `zfss` |
-| Identifier | `com.forge.zfss` |
-| Window title | `ZFSS - Signal Capture` |
-| Window size | 600 × 400 |
-| Dev URL | `http://localhost:5173` |
-| Build output | `../dist` |
-| Bundle targets | `deb`, `appimage` |
 
 ---
 
@@ -918,6 +848,76 @@ npm run tauri dev
 # Build
 npm run tauri build
 ```
+
+---
+
+# Runtime
+
+**Document version:** 1.0 (bootstrap scaffold)
+
+Runtime topology, process boundaries, and managed state.
+
+> This chapter is a registry-generated bootstrap scaffold for a
+> `application` class documentation system. Replace this placeholder with
+> real authored content. Registry will not invent repo truth that is not
+> already present in the repo.
+
+---
+
+# Data
+
+**Document version:** 1.0 (bootstrap scaffold)
+
+Data model, persistence, and schema migration posture.
+
+> This chapter is a registry-generated bootstrap scaffold for a
+> `application` class documentation system. Replace this placeholder with
+> real authored content. Registry will not invent repo truth that is not
+> already present in the repo.
+
+---
+
+# Governance
+
+**Truth class:** canonical doctrine
+
+This documentation system governs ZFSS repo-local implementation truth. It does
+not define shared Forge ecosystem doctrine or DataForge cloud authority beyond
+the explicit integration and handoff surfaces ZFSS owns.
+
+## Authority Boundary
+
+- `doc/system/` is the canonical authored source tree for ZFSS system truth.
+- `doc/ZFSSYSTEM.md` is generated output and must not be edited by hand.
+- Supporting docs, plans, and archives outside `doc/system/` are subordinate to
+  the compiled system reference when they describe current behavior.
+- Runtime behavior and verification evidence override stale prose; when they
+  disagree, update the source chapter and rebuild the compiled artifact.
+
+## Change Control
+
+Changes that alter signal capture, issue lifecycle, database schema, response
+control, integrations, or local authority boundaries must update the relevant
+`doc/system/` chapter in the same change as the implementation.
+
+Documentation-only changes must still rebuild `doc/ZFSSYSTEM.md` with:
+
+```bash
+bash doc/system/BUILD.sh
+```
+
+---
+
+# Integrations
+
+**Document version:** 1.0 (bootstrap scaffold)
+
+External integrations, upstream services, and wire contracts.
+
+> This chapter is a registry-generated bootstrap scaffold for a
+> `application` class documentation system. Replace this placeholder with
+> real authored content. Registry will not invent repo truth that is not
+> already present in the repo.
 
 ---
 
