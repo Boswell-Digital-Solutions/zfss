@@ -2,8 +2,22 @@ name: CI
 
 on:
   pull_request:
+    paths:
+      - '**'
+      - '!docs/**'
+      - '!doc/**'
+      - '!**/*.md'
+      # Shell scripts under doc/system/: the "Validate scripts" step runs bash -n on them.
+      - 'doc/system/*.sh'
   push:
     branches: [master]
+    paths:
+      - '**'
+      - '!docs/**'
+      - '!doc/**'
+      - '!**/*.md'
+      # Shell scripts under doc/system/: the "Validate scripts" step runs bash -n on them.
+      - 'doc/system/*.sh'
 
 permissions:
   contents: read

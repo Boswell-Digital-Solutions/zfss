@@ -1,0 +1,61 @@
+name: Documentation
+
+# Runs on documentation changes only. A change to code runs the code CI.
+# A change to documentation runs this workflow and no code CI.
+# See doc/system/40-governance.md ("Which CI runs for which change").
+#
+# The code CI (ci.yml) keeps its own copy of the documentation steps below.
+# They run there on every code change. They run here on every documentation change.
+
+on:
+  pull_request:
+    paths:
+      - 'docs/**'
+      - 'doc/**'
+      - '**/*.md'
+      - '.github/workflows/documentation.yml'
+  push:
+    branches: [master]
+    paths:
+      - 'docs/**'
+      - 'doc/**'
+      - '**/*.md'
+      - '.github/workflows/documentation.yml'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: documentation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  documentation:
+    name: Documentation (system build and snapshots)
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Builds doc/ZFSSYSTEM.md from doc/system/ and validates the snapshots.
+      - name: Build the system reference
+        run: bash doc/system/BUILD.sh
+
+      - name: Check the assembled reference is committed
+        run: git diff --exit-code -- doc
+
+      - name: Check no superseded system document exists
+        run: |
+          test ! -e SYSTEM.md
+          test ! -e doc/SYSTEM.md
+          test ! -e doc/zsSYSTEM.md
+
+      # Same check as the "Reject superseded authority claims" step in ci.yml.
+      - name: Reject superseded authority claims
+        run: |
+          if grep -R -n -E 'single source of truth|sole authoritative|no cloud authority|authoritative source of truth|only writable DataForgeDB|No test suite yet|No CI/CD pipeline|Repository and service modules are stubs' \
+            README.md CLAUDE.md doc/ZFSSYSTEM.md doc/system src-tauri/src contracts; then
+            echo 'Superseded authority language found in a canonical surface' >&2
+            exit 1
+          fi
