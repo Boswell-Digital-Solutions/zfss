@@ -60,3 +60,9 @@ do not establish automatic coverage for arbitrary direct Tauri CLI invocations.
 The current documentation builder has no strict `--check` mode. That argument
 runs a rebuild. Validation must compare generated output hashes across rebuilds;
 exit status alone does not prove that committed documentation was current.
+
+After Tauri succeeds, the checked wrapper reads Cargo metadata for the actual
+target directory. This supports workspace roots and configured output directories
+without assuming `src-tauri/target`. Metadata runs offline with the existing
+lockfile and no dependency listing. Metadata failure blocks archive inspection
+and upload; the wrapper does not guess another path.

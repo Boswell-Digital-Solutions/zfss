@@ -114,7 +114,7 @@ class LintianBoundary(unittest.TestCase):
             shutil.copy2(ROOT / name, scripts / name)
         (repo / "build-deb.sh").write_text("#!/bin/sh\nexit 0\n")
         (self.tools / "bash").symlink_to("/bin/bash")
-        bundle = repo / "src-tauri/target/release/bundle/deb"
+        bundle = repo / "workspace-target/release/bundle/deb"
         bundle.mkdir(parents=True)
         shutil.copy2(self.package, bundle / "app.deb")
         # Match the repo-specific CLI in the wrapper without invoking a build.
@@ -131,6 +131,13 @@ class LintianBoundary(unittest.TestCase):
         for name in ["uname", "mktemp", "dirname", "touch", "rm"]:
             (self.tools / name).symlink_to(shutil.which(name))
         (self.tools / "python3").symlink_to(sys.executable)
+        (self.tools / "cargo").write_text(
+            """#!/bin/sh
+printf '{"target_directory":"%s"}\\n' "${CARGO_TARGET_DIR:-$FIXTURE_CARGO_TARGET}"
+"""
+        )
+        (self.tools / "cargo").chmod(0o755)
+        self.env["FIXTURE_CARGO_TARGET"] = str(repo / "workspace-target")
         self.env["FIXTURE_PACKAGE"] = str(bundle / "app.deb")
         self.env.pop("CARGO_TARGET_DIR", None)
         self.env.pop("CARGO_BUILD_TARGET", None)

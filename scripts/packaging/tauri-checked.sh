@@ -26,9 +26,6 @@ done
 if [[ "${1:-}" == build && "$(uname -s)" == Linux && "$BUNDLE_DISABLED" == false ]]; then
     if [[ ",$BUNDLES," == *,deb,* || "$BUNDLES" == all ]]; then CHECK_DEB=true; fi
 fi
-TARGET_DIR="${CARGO_TARGET_DIR:-$ROOT/src-tauri/target}"
-if [[ "$TARGET_DIR" != /* ]]; then TARGET_DIR="$ROOT/src-tauri/$TARGET_DIR"; fi
-BUNDLE_DIR="$TARGET_DIR${TARGET:+/$TARGET}/$PROFILE/bundle/deb"
 if [[ "$CHECK_DEB" == true ]]; then
     python3 scripts/packaging/lint_debs.py --check-tool
     BUILD_MARKER=$(mktemp "${TMPDIR:-/tmp}/bds-deb-build-XXXXXXXX")
@@ -36,6 +33,10 @@ if [[ "$CHECK_DEB" == true ]]; then
 fi
 npm exec -- tauri "$@"
 if [[ "$CHECK_DEB" == true ]]; then
+    TARGET_DIR=$(cargo metadata --offline --locked --no-deps --format-version 1 \
+        --manifest-path "$ROOT/src-tauri/Cargo.toml" \
+        | python3 -c 'import json, sys; print(json.load(sys.stdin)["target_directory"])')
+    BUNDLE_DIR="$TARGET_DIR${TARGET:+/$TARGET}/$PROFILE/bundle/deb"
     shopt -s nullglob
     packages=("$BUNDLE_DIR/"*.deb)
     (( ${#packages[@]} > 0 )) || { echo "No Debian archive produced: $BUNDLE_DIR" >&2; exit 1; }
