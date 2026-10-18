@@ -1,0 +1,62 @@
+name: Debian archive checks
+
+on:
+  pull_request:
+    paths:
+      - "scripts/packaging/**"
+      - ".github/workflows/debian-lintian.yml"
+  workflow_dispatch:
+    inputs:
+      run_id:
+        description: "Existing package-producing workflow run in this repository"
+        required: true
+        type: string
+      artifact_name:
+        description: "Artifact containing final Debian archives"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  command-regressions:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - run: python3 -m unittest discover -s scripts/packaging -p test_lint_debs.py -v
+
+  inspect-archives:
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Install package checker
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends lintian
+      - name: Record source workflow metadata
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RUN_ID: ${{ inputs.run_id }}
+        run: |
+          [[ "$RUN_ID" =~ ^[0-9]+$ ]] || { echo "run_id must be numeric" >&2; exit 1; }
+          mkdir -p lintian-evidence
+          gh api "repos/$GITHUB_REPOSITORY/actions/runs/$RUN_ID" \
+            --jq '{id,head_sha,event,status,conclusion,html_url}' > lintian-evidence/source-workflow.json
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          name: ${{ inputs.artifact_name }}
+          path: package-input
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.run_id }}
+      - name: Inspect every downloaded final archive
+        run: python3 scripts/packaging/lint_debs.py package-input --report lintian-evidence/report.json
+      - name: Retain inspection evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: lintian-evidence-${{ github.run_id }}
+          path: lintian-evidence/
+          if-no-files-found: error
