@@ -9,6 +9,10 @@ never the artifact.
 
 ---
 
+## Repo Identity
+
+- Default branch: master
+
 ## Boundaries
 
 - **The feedback record is append-only.** Triage and response are new rows, not edits to the
