@@ -9,7 +9,7 @@ the explicit integration and handoff surfaces ZFSS owns.
 ## Authority Boundary
 
 - `doc/system/` is the canonical authored source tree for ZFSS system truth.
-- `doc/ZFSSYSTEM.md` is generated output and must not be edited by hand.
+- `doc/zfsSYSTEM.md` is generated output and must not be edited by hand.
 - Supporting docs, plans, and archives outside `doc/system/` are subordinate to
   the compiled system reference when they describe current behavior.
 - Runtime behavior and verification evidence override stale prose; when they
@@ -21,7 +21,7 @@ Changes that alter signal capture, issue lifecycle, database schema, response
 control, integrations, or local authority boundaries must update the relevant
 `doc/system/` chapter in the same change as the implementation.
 
-Documentation-only changes must still rebuild `doc/ZFSSYSTEM.md` with:
+Documentation-only changes must still rebuild `doc/zfsSYSTEM.md` with:
 
 ```bash
 bash doc/system/BUILD.sh
@@ -45,8 +45,8 @@ The filter re-includes one path, because a code check reads it:
 - `doc/system/*.sh`. The step "Validate scripts" runs `bash -n` on `BUILD.sh` and `validate_snapshots.sh`. A shell script is code, even when it lives under `doc/`.
 
 The code CI also reads documentation in two steps.
-The step "Rebuild canonical system document" builds and diffs `doc/ZFSSYSTEM.md`.
-The step "Reject superseded authority claims" scans `README.md`, `CLAUDE.md`, `doc/ZFSSYSTEM.md` and `doc/system` for banned authority wording.
+The step "Rebuild canonical system document" builds and diffs `doc/zfsSYSTEM.md`.
+The step "Reject superseded authority claims" scans `README.md`, `CLAUDE.md`, `doc/zfsSYSTEM.md` and `doc/system` for banned authority wording.
 These steps are documentation gates.
 The Documentation CI runs the same checks on every documentation change.
 The code CI keeps its copies and runs them on every code change.
@@ -58,7 +58,7 @@ It runs `bash doc/system/BUILD.sh`.
 It fails if `git diff --exit-code -- doc` shows a difference.
 It fails if a superseded system document exists.
 It fails if a banned authority phrase appears in the scanned files.
-The assembled `doc/ZFSSYSTEM.md` must be built from its parts and committed.
+The assembled `doc/zfsSYSTEM.md` must be built from its parts and committed.
 
 No scheduled run exists.
 No secret scan or other security scan exists in this repository.

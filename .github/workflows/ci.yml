@@ -46,14 +46,14 @@ jobs:
       - name: Rebuild canonical system document
         run: |
           bash doc/system/BUILD.sh
-          git diff --exit-code -- doc/ZFSSYSTEM.md
+          git diff --exit-code -- doc/zfsSYSTEM.md
           test ! -e SYSTEM.md
           test ! -e doc/SYSTEM.md
           test ! -e doc/zsSYSTEM.md
       - name: Reject superseded authority claims
         run: |
           if grep -R -n -E 'single source of truth|sole authoritative|no cloud authority|authoritative source of truth|only writable DataForgeDB|No test suite yet|No CI/CD pipeline|Repository and service modules are stubs' \
-            README.md CLAUDE.md doc/ZFSSYSTEM.md doc/system src-tauri/src contracts; then
+            README.md CLAUDE.md doc/zfsSYSTEM.md doc/system src-tauri/src contracts; then
             echo 'Superseded authority language found in a canonical surface' >&2
             exit 1
           fi
