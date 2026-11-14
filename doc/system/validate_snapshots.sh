@@ -3,7 +3,7 @@ set -euo pipefail
 
 PARTS_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT_DIR="$(cd "$PARTS_DIR/../.." && pwd)"
-ASSEMBLED_OUTPUT="${1:-$ROOT_DIR/doc/ZFSSYSTEM.md}"
+ASSEMBLED_OUTPUT="${1:-$ROOT_DIR/doc/zfsSYSTEM.md}"
 
 require_contains() {
   local file="$1"
@@ -37,10 +37,10 @@ require_path_absent() {
 }
 
 # Canonical identity: the index must declare the designation-bound output.
-require_contains "$PARTS_DIR/_index.md" "**Designation:** ZFS" "index designation"
+require_contains "$PARTS_DIR/_index.md" "**Designation:** zfs" "index designation"
 require_contains "$PARTS_DIR/_index.md" "BDS Documentation Protocol v2.0" "index protocol"
-require_contains "$PARTS_DIR/_index.md" 'Primary output: `doc/ZFSSYSTEM.md`' "index primary output"
-require_contains "$PARTS_DIR/BUILD.sh" 'DESIGNATION="ZFS"' "build designation"
+require_contains "$PARTS_DIR/_index.md" 'Primary output: `doc/zfsSYSTEM.md`' "index primary output"
+require_contains "$PARTS_DIR/BUILD.sh" 'DESIGNATION="zfs"' "build designation"
 require_absent  "$PARTS_DIR/_index.md" 'Primary output: `doc/SYSTEM.md`' "index legacy primary output"
 require_absent  "$PARTS_DIR/_index.md" 'Command: `bash doc/SYSTEM.md`' "index legacy doc/SYSTEM.md command"
 require_path_absent "$ROOT_DIR/SYSTEM.md" "legacy root snapshot"
@@ -50,8 +50,8 @@ require_path_absent "$ROOT_DIR/doc/zsSYSTEM.md" "legacy designation snapshot"
 # Assembled artifact must carry doctrine and not still declare legacy output.
 test -f "$ASSEMBLED_OUTPUT"
 require_contains "$ASSEMBLED_OUTPUT" "Document version" "assembled document version header"
-require_contains "$ASSEMBLED_OUTPUT" "**Designation:** ZFS" "assembled designation"
-require_contains "$ASSEMBLED_OUTPUT" 'Primary output: `doc/ZFSSYSTEM.md`' "assembled primary output"
+require_contains "$ASSEMBLED_OUTPUT" "**Designation:** zfs" "assembled designation"
+require_contains "$ASSEMBLED_OUTPUT" 'Primary output: `doc/zfsSYSTEM.md`' "assembled primary output"
 require_contains "$ASSEMBLED_OUTPUT" "BDS Documentation Protocol v2.0" "assembled protocol"
 require_contains "$ASSEMBLED_OUTPUT" "truth classes" "assembled truth classes"
 require_absent  "$ASSEMBLED_OUTPUT" 'Primary output: `doc/SYSTEM.md`' "assembled legacy primary output"
